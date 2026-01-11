@@ -1,63 +1,52 @@
-# MLOps UvA Bachelor AI Course: Medical Image Classification Skeleton Code
+# MLOps UvA Bachelor AI Course: Medical Image Classification
 
-![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)
-![Build Status](https://github.com/yourusername/mlops_course/actions/workflows/ci.yml/badge.svg)
+![Python](https://img.shields.io/badge/python-3.13-blue.svg)
 ![Code Style: Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)
 
-A repo exemplifying **MLOps best practices**: modularity, reproducibility, automation, and experiment tracking.
-
-This project implements a standardized workflow for training neural networks on medical data (PCAM/TCGA). 
-
-The idea is that you fill in the repository with the necessary functions so you can execute the ```train.py``` function. Please also fill in this ```README.md``` clearly to setup, install and run your code. 
-
-Don't forget to setup CI and linting!
+This repository implements a reliable, reproducible MLOps system for medical image classification using the PatchCamelyon (PCAM) dataset. [cite_start]It moves away from interactive notebooks toward structured Python scripts optimized for High-Performance Computing (HPC) environments[cite: 11, 1757].
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Setup & Installation (Snellius HPC)
 
-### 1. Installation
-Clone the repository and set up your isolated environment.
+[cite_start]On Snellius, software is managed via Environment Modules[cite: 467, 1443]. You must load these before setting up your virtual environment.
 
+### 1. Load Environment Modules
 ```bash
-# 1. Create a virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+# Clean existing modules and load the 2025 software stack
+module purge
+module load 2025 [cite: 471, 1454]
+module load Python/3.13.1-GCCcore-14.2.0 [cite: 472, 1458]
+module load matplotlib/3.10.3-gfbf-2025a [cite: 473, 1505]
 
-# 2. Install the package in "Editable" mode
+# Create and activate the virtual environment in the project root
+python -m venv venv
+source venv/bin/activate
+
+# Install the package in "Editable" mode
 pip install -e .
 
-# 3. Install pre-commit hooks
+# Install PyTorch with CUDA (GPU) support
+pip install torch torchvision --index-url [https://download.pytorch.org/whl/cu121](https://download.pytorch.org/whl/cu121)
+
+# Initialize pre-commit hooks for automated linting/formatting
 pre-commit install
-```
-
-### 2. Verify Setup
-```bash
-pytest tests/
-```
-
-### 3. Run an Experiment
-```bash
-python experiments/train.py --config experiments/configs/train_config.yaml
-```
-
 ---
 
 ## 📂 Project Structure
 
 ```text
 .
-├── src/ml_core/          # The Source Code (Library)
-│   ├── data/             # Data loaders and transformations
-│   ├── models/           # PyTorch model architectures
-│   ├── solver/           # Trainer class and loops
-│   └── utils/            # Loggers and experiment trackers
-├── experiments/          # The Laboratory
-│   ├── configs/          # YAML files for hyperparameters
-│   ├── results/          # Checkpoints and logs (Auto-generated)
-│   └── train.py          # Entry point for training
-├── scripts/              # Helper scripts (plotting, etc)
-├── tests/                # Unit tests for QA
-├── pyproject.toml        # Config for Tools (Ruff, Pytest)
-└── setup.py              # Package installation script
+├── src/ml_core/          # THE LIBRARY: Modular, tested, reusable code 
+│   ├── data/             # PCAM Dataset and HDF5 lazy-loading logic 
+│   ├── models/           # Neural Network architectures (MLP) 
+│   ├── solver/           # Training loops and optimization logic 
+│   └── utils/            # Loggers and health metrics (e.g., Gradient Norms) 
+├── experiments/          # THE LABORATORY: Research code and play [cite: 753]
+│   ├── configs/          # YAML files for hyperparameters (No hardcoding!) 
+│   ├── results/          # Auto-generated checkpoints and logs [cite: 735]
+│   └── train.py          # Entry point for training runs 
+├── tests/                # Quality Assurance: Unit tests for QA 
+├── pyproject.toml        # Modern config center for tools (Ruff, Pytest) 
+└── .gitignore            # Prevents large data (H5) and venv from being tracked 
 ```

@@ -68,5 +68,7 @@ experiments/results/
    * `venv/`: You must ignore this because it contains gigabytes of external libraries that are platform-dependent and should not be versioned.
    * `data/` and `*.pt`: large datasets and model weights are "binary blobs" that bloat the repository and should be stored in specialized in storage, not Git.
    * `.env`: This file often contains sensitive API keys or secrets that should never be leaked to a public or shared repository
-   - **README info:** 
-4. **Git Log:** `[Paste output of git log --oneline]`
+   - **README info:** Yes the README should document how to access Snellius and load specific modules like the 2025 stack. Without this, the "Quick Start" commands woudl fail because the system wouldn't know which Python version to use.
+4. **Git Log:** `5ec32b3 (HEAD -> main, origin/main, origin/HEAD) Update gitignore and add initial journal questions`
+`880d065 Merge pull request #2 from SURF-ML/example_script`
+`d2187cb example lecture 2 week 1`
