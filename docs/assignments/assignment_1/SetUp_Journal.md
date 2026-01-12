@@ -82,8 +82,9 @@ experiments/results/
    * `data/` and `*.pt`: large datasets and model weights are "binary blobs" that bloat the repository and should be stored in specialized in storage, not Git.
    * `.env`: This file often contains sensitive API keys or secrets that should never be leaked to a public or shared repository
    - **README info:** Yes the README should document how to access Snellius and load specific modules like the 2025 stack. Without this, the "Quick Start" commands woudl fail because the system wouldn't know which Python version to use.
-4. **Git Log:** aafcd55 (HEAD -> main, origin/main, origin/HEAD) updated readme.md
-```bash
+4. **Git Log:** 
+'''bash 
+aafcd55 (HEAD -> main, origin/main, origin/HEAD) updated readme.md
 5ec32b3 Update gitignore and add initial journal questions
 880d065 Merge pull request #2 from SURF-ML/example_script
 d2187cb example lecture 2 week 1
@@ -280,13 +281,13 @@ tests/test_model_shapes.py ..                                             [100%]
 
     I attempted to resolve this by iteratively optimizing the resource usage:
 
-        Reduced Overhead: Set num_workers=0 in config.yaml to avoid multiprocessing memory spikes.
+   * Reduced Overhead: Set num_workers=0 in config.yaml to avoid multiprocessing memory spikes.
 
-        Lowered Batch Size: Reduced batch_size from 128 to 64, and finally to 32 to fit within the memory slice.
+   * Lowered Batch Size: Reduced batch_size from 128 to 64, and finally to 32 to fit within the memory slice.
 
-        Increased Time: Requested the maximum time allowed for the partition (00:45:00).
+   * Increased Time: Requested the maximum time allowed for the partition (00:45:00).
 
-        Sanitized Data: Added np.nan_to_num in the Dataset class to prevent potential numerical crashes.
+   * Sanitized Data: Added np.nan_to_num in the Dataset class to prevent potential numerical crashes.
 
     Despite these optimizations, the I/O bottleneck of reading thousands of small files from the shared /scratch-shared/ filesystem likely caused the data loading to be too slow for the allocated time.
 
