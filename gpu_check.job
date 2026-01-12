@@ -1,0 +1,19 @@
+#!/bin/bash
+#SBATCH --partition=gpu_course
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=2
+#SBATCH --gpus-per-task=1
+#SBATCH --mem=16G
+#SBATCH --time=00:10:00
+#SBATCH --output=gpu_check_%j.out
+
+# Load the library bricks
+module purge
+module load 2025
+module load Python/3.13.1-GCCcore-14.2.0
+
+# Enter your private bubble
+source venv/bin/activate
+
+# Run the command that only works on a real compute node
+python -c "import torch; print(f'CUDA available: {torch.cuda.is_available()}'); print(f'GPU: {torch.cuda.get_device_name(0) if torch.cuda.is_available() else \"None\"}')"

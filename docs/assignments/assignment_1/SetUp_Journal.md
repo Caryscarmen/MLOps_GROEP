@@ -8,6 +8,8 @@
 * **GitHub Repository:** https://github.com/samvubs/MLOps_2026#
 * **Base Skeleton Used:** [https://github.com/SURF-ML/MLOps_2026/tree/main](https://github.com/SURF-ML/MLOps_2026/tree/main)
 
+---
+
 # Question 1: First Contact with Snellius
 
 1. **Connection Details**
@@ -22,10 +24,14 @@
     2. I typed `yes` to add the cluter to my `known_hosts` file.
     3. I then entered my password when prompted to complete the login.
 
+---
+
 3. **Smooth Connection (If applicable):**
    - **SSH Client:** (OpenSSH_10.0p2, LibreSSL 3.3.6)
    - **Prior Experience:** Webtech
    - **Preemptive Steps:** None that I actively took.
+
+---
 
 ## Question 2: Environment Setup
 1. **Setup Sequence:**
@@ -51,24 +57,126 @@ While the installation went well the handbook notes that using venv over Conda i
 4. **Verification:**
    - **Output:** `PyTorch: 2.5.1+cu121`
 `CUDA available: False`
-   - **Explanation:** Because we are running this on a Login Node, which is a shared node for interactive tasks like editing code and script management. These nodes do not have GPU hardware, to see it true I will have to submit the job to a GPU-accelarated compute node.
+   - **Explanation:** Because we are running this on a Login Node, which is a shared node for interactive tasks like editing code and script management. These nodes do not have GPU hardware, to see it true I will have to submit the job to a GPU-accelarated compute node. The False is expected because I ran it on a login node `int6`. Per the Snellius Handbook, login nodes are for management and lack GPU accelarators.
+
+---
 
 ## Question 3: Version Control Setup
 1. **GitHub URL:** https://github.com/samvubs/MLOps_2026#
 2. **Authentication:** SSH
 3. **.gitignore:**
-   - **Contents:** [__pycache__/
+   - **Contents:** 
+``` text
+   __pycache__/
 *.pyc
 experiments/logs/
 experiments/results/
 .env
 .DS_Store
-*.egg-info/]
+*.egg-info/
+```
    - **Important items to include:** 
    * `venv/`: You must ignore this because it contains gigabytes of external libraries that are platform-dependent and should not be versioned.
    * `data/` and `*.pt`: large datasets and model weights are "binary blobs" that bloat the repository and should be stored in specialized in storage, not Git.
    * `.env`: This file often contains sensitive API keys or secrets that should never be leaked to a public or shared repository
    - **README info:** Yes the README should document how to access Snellius and load specific modules like the 2025 stack. Without this, the "Quick Start" commands woudl fail because the system wouldn't know which Python version to use.
-4. **Git Log:** `5ec32b3 (HEAD -> main, origin/main, origin/HEAD) Update gitignore and add initial journal questions`
-`880d065 Merge pull request #2 from SURF-ML/example_script`
-`d2187cb example lecture 2 week 1`
+4. **Git Log:** aafcd55 (HEAD -> main, origin/main, origin/HEAD) updated readme.md
+``` text
+5ec32b3 Update gitignore and add initial journal questions
+880d065 Merge pull request #2 from SURF-ML/example_script
+d2187cb example lecture 2 week 1
+81e4e92 Merge pull request #1 from SURF-ML/fix_tests_for_students
+6dcc5e7 tests update correct format
+ab45d42 better starting pyproject
+f527672 data class, loader and model tests
+6e98f69 proper imports and venv verification
+d78dee2 minor add
+2743d0a remove setup, not needed because we have pyproject
+8a04023 Update README.md
+11973fb initial commit for the folder structure
+e8582f8 Initial commit
+```
+
+---
+
+## Question 4: Your First Batch Job (Slurm)
+1. **Files Provided:** 
+* `gpu_check.job`
+* `gpu_check_18243188.out`
+2. **Job ID & Stats:** 
+* Job ID: 18243188
+* Stats: 
+```text
+JobID                      Start                 End    Elapsed      State 
+------------ ------------------- ------------------- ---------- ---------- 
+18243188     2026-01-11T21:08:15 2026-01-11T21:08:25   00:00:10  COMPLETED 
+18243188.ba+ 2026-01-11T21:08:15 2026-01-11T21:08:25   00:00:10  COMPLETED 
+18243188.ex+ 2026-01-11T21:08:15 2026-01-11T21:08:25   00:00:10  COMPLETED 
+```
+3. **Submission Problem:** 
+* The Error: `sact: error: Unknown arguments: -format.`
+* Diagnosis: The command failed bcause of a character encoding issue where a "long dash" was used instead of a double-dash(--).
+4. **Verification:** It works. It outputted `CUDA available: True` and `GPU: NVIDIA A100-SXM4-40GB MIG 1g.5gb`
+5. **Login vs Batch:** Running on a Login Node like `int6` happens immdeiately on a management server that lacks GPU hardware, which is why the check said `False`. Submitting a Batch Job via Slurm puts the request in a queue and once it's my turn, Slurm gives me a dedicated Compute Node with an actual GPU, which is why the script finally returns `True`.
+6. **Why Clusters?:** 
+We use clusters because they provide parallel computing power that a laptop can't match. They offer hundreds of CPU cores, terabytes of RAM and high speed networking to move data between nodes quickly. For MLOps, the most important part is access to like high level grade GPUs which have more VRAM than normal cards so models can train on huge datasets much faster.
+
+---
+
+## Question 5: Reflection & Conceptual Understanding
+1. **The Filesystem:**
+   - **I/O Performance:** 100k small files is bad because it causes a metadata bottleneck. Each file access requires metadata lookups which overwhelms the systems IOPS capacity. This is especially bad in ML because we randomly sample data, making it impossible for the ysstem to "predict" and pre-load the files.
+   - **Mitigation Strategies:** 
+   * Strategy 1: HDF5 containers: Store images in one big "shipping container". This stops the computer from wasting time doing "paperwork" (metadata) for 100,000 individual images and just reads it instantly of one big file with the 100,000 images.
+   * Strategt 2: Local Scratch Storage: We copy this shipping container from the server to the Local Scratch inside our specific compute node so the GPU can grab data instantly.
+   - **Dataset Versioning:** We cannot use Git for datasets in the GB or PB range because Git is optimized for text and struggles with large binary blobs, which makes the repository unmanageably slow. Instead we use DVC. DVC stores the actual heavy data in a seperate remote storage and places a tiny 'pointer' or 'receipt' file in Git. This allows us to track which version of the data we used without bloating our code repository.
+2. **Reproducibility:** 
+* Dependency Drift: Different versions of libraries perform math differently. We can fix that by pinning: using a `pyproject.toml` or `venv` to lock in the exact versons of every library used.
+* Stochasity (Randomness): Different random weight initialization at the start of training can produce different outcomes. By seeding: setting a global random seed will produce identical randomness across runs.
+* Hardware Non-determinism: Tiny differences in hwo GPUs vs CPUs handle floating-point decimal precision. Logging the specific hardware to account for hardware-specific numeral behavior avoids confusion.
+3. **Conda vs venv vs uv:** [Pros/Cons of each for Snellius]
+* Conda
+    * Pros: Great for messy projects that need weird non-Python tools and lets you install your own version of everything without asking permission.
+    * Cons: Bad for on Snellius because it creates thousands of small files that choke the GPFS filesystem and can often break the GPU drivers.
+* Python venv
+    * Pros: Perfect for Snellius: it's standard, stable and works natively with the 2025 modules provided.
+    * Cons: It can only manage Python libraries and no complex non-python software like drivers. Plus you have to manually remember which `module load` commands you used every time you log back in.
+* Astral uv
+    * Pros: It's 10-100x faster at installing libraries and uses a "Lockfile" to ensure everyone has the same setup.
+    * Cons: It's a bit newer so there's a small learning curve for the different commands. It's not standard either so you might have to re-install uv itself if the system gets updated.
+
+---
+
+## Question 6: Package Integrity
+1. **ModuleNotFoundError:** I ran an editable install linking my source code to venv's site packages. I initially encountered a series of ModuleNotFoundError for libs. I manually installed those but then I realized, that should not be how it works. So i looked at the pyproject.toml and saw it needed to refer to requirements.txt so I just copy and pasted those into the file. So i did ecnounter `ModuleNotFoundError` (and a shell `command not found` for pytest), but it was not due to a PYTHONPATH or __init__.py.
+
+    Also when I ran `pip install -e .` I received a `TOMLDecodeError` because I had forgotten to use quotes and commas in my pyproject.toml dependencies list. This prevented the ml_core package from being installed into my venv.
+2. **Import Abstraction:** Abstraction. If you change the filename later you only have to update the init (like receptionist). Instead of updating every single file in the project to update the path.
+3. **Pytest Result:** 
+<pre>
+(venv) scur2395@int4:~/MLOps_2026$ pytest tests/test_imports.py
+============================== test session starts ==============================
+platform linux -- Python 3.9.21, pytest-8.4.2, pluggy-1.6.0
+rootdir: /gpfs/home3/scur2395/MLOps_2026
+configfile: pyproject.toml
+collected 1 item                                                                
+
+tests/test_imports.py .                                                   [100%]
+
+=============================== 1 passed in 5.80s ===============================
+</pre>
+
+---
+
+## Question 7: The Data Pipeline
+1. **Implementation:** `[Paste __getitem__ method]`
+2. **Local Pytest:** `[Paste output of pytest tests/test_pcam_pipeline.py]`
+3. **CI Pipeline:**
+   - **Screenshot:** ![GitHub Actions Tab](assets/github_actions.png)
+   - **Reflection:** [CI vs Local discrepancies]
+4. **Sampling Math:** [Average positives with vs without WeightedRandomSampler]
+5. **EDA Plots:**
+   - ![PCAM Intensity Outliers](assets/pcam.png)
+   - [Additional plots as requested]
+
+---

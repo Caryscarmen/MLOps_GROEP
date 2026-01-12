@@ -6,7 +6,20 @@ build-backend = "setuptools.build_meta"
 name = "ml_core"
 version = "0.1.0"
 dependencies = [
-    # TODO: Migrate dependencies from requirements.txt here
+    "numpy",
+    "torch",
+    "torchvision",
+    "h5py",
+    "pyyaml",
+    "tqdm",
+    "torcheval",
+    "tensorboard",
+    "matplotlib",
+    "seaborn",
+    "pandas",
+    "pytest",
+    "ruff",
+    "pre-commit",
 ]
 
 [tool.ruff]
