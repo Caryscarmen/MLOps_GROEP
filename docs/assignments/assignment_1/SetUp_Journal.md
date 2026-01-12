@@ -212,10 +212,80 @@ tests/test_data_loader.py ....                                            [100%]
 </pre>
 3. **CI Pipeline:**
    - **Screenshot:** ![GitHub Actions Tab](assets/github_actions.png)
-   - **Reflection:** [CI vs Local discrepancies]
-4. **Sampling Math:** [Average positives with vs without WeightedRandomSampler]
+   - **Reflection:** Both worked
+4. **Sampling Math:** Without the sampler there is a natural imbalance in the dataset. With the WeightedRandomSampler the probability of drawing a sample is proportional to its class frequencuy forcing a balanced distribution.
 5. **EDA Plots:**
-   - ![PCAM Intensity Outliers](assets/pcam.png)
-   - [Additional plots as requested]
+   - ![EDA plots](assets/eda_class_balance.png)
+   -![EDA plots](assets/eda_intensities.png)
+   - ![EDA plots](assets/eda_samples.png)
+
+---
+
+## Question 8: Model Implementation (MLP)
+1. **Forward Pass:** The correct input is 3x96x96. You get this by calculating the flattened size of the PCAM images. If i had used the wrong dimension I would get an error.
+2. **Weight Updates:** Checking that the lossi s a number only confirms that the forward pass is working but does not guarantee the model is learning. So its important to verify that the weights actually update.
+3. **Test Output:** 
+<pre>
+(venv) scur2395@int6:~/MLOps_2026$ pytest tests/test_model_shapes.py
+============================== test session starts ==============================
+platform linux -- Python 3.9.21, pytest-8.4.2, pluggy-1.6.0
+rootdir: /gpfs/home3/scur2395/MLOps_2026
+configfile: pyproject.toml
+collected 2 items                                                               
+
+tests/test_model_shapes.py ..                                             [100%]
+
+============================== 2 passed in 11.05s ===============================
+</pre>
+
+---
+## Question 9: Training Loop & Loss Visualization
+1. **Training Execution:** Submitted jobs via Slurm (`sbatch train_job.sh`) and Node ID: `gcn9`
+2. **Loss Visualization:**
+   - **Plot:** 
+   <pre>
+   JobID             State ExitCode     MaxRSS 
+------------ ---------- -------- ---------- 
+18257481         FAILED      1:0            
+18257625         FAILED      1:0            
+18257625.ba+     FAILED      1:0      7106K 
+18257625.ex+  COMPLETED      0:0            
+18257723         FAILED      1:0            
+18257723.ba+     FAILED      1:0      4911K 
+18257723.ex+  COMPLETED      0:0            
+18257757        TIMEOUT      0:0            
+18257757.ba+  CANCELLED     0:15   1166323K 
+18257757.ex+  COMPLETED      0:0            
+18257791        TIMEOUT      0:0            
+18257791.ba+  CANCELLED     0:15   1162112K 
+18257791.ex+  COMPLETED      0:0            
+18257954        TIMEOUT      0:0            
+18257954.ba+  CANCELLED     0:15    984860K 
+18257954.ex+  COMPLETED      0:0            
+18259916         FAILED      1:0            
+18259916.ba+     FAILED      1:0      3674K 
+   </pre>
+
+   I unfortunately was not able to generate a plot.
+   - **Trajectory Analysis:** 
+   I was unable to generate the loss plot because the training jobs consistently timed out or were terminated by the scheduler before completing the first epoch. Hypothesis: If the training had succeeded, I would expect the Training Loss to decrease strictly (as the MLP overfits the training data). The Validation Loss would likely decrease initially but then plateau or rise (diverge) as the simple MLP model begins to overfit, since we only used basic dropout and the PCAM dataset is complex
+3. **Most Frustrating Error:**
+   - **Error Message:** `State: TIMEOUT`
+   `ExitCode: 0:0`
+   `(Job cancelled due to time limit)`
+   - **Debugging Steps:** 
+   My jobs were consistently killed by the Slurm scheduler on the gpu_course partition, likely due to the strict resource constraints (16GB RAM limit and short wall-times).
+
+    I attempted to resolve this by iteratively optimizing the resource usage:
+
+        Reduced Overhead: Set num_workers=0 in config.yaml to avoid multiprocessing memory spikes.
+
+        Lowered Batch Size: Reduced batch_size from 128 to 64, and finally to 32 to fit within the memory slice.
+
+        Increased Time: Requested the maximum time allowed for the partition (00:45:00).
+
+        Sanitized Data: Added np.nan_to_num in the Dataset class to prevent potential numerical crashes.
+
+    Despite these optimizations, the I/O bottleneck of reading thousands of small files from the shared /scratch-shared/ filesystem likely caused the data loading to be too slow for the allocated time.
 
 ---

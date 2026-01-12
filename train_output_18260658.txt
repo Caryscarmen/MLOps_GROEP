@@ -1,0 +1,3 @@
+Job ID: 18260658
+Node: gcn9
+CUDA: True

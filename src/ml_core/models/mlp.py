@@ -14,12 +14,25 @@ class MLP(nn.Module):
     ):
         super().__init__()
         
-        # TODO: Build the MLP architecture
-        # If you are up to the task, explore other architectures or model types
-        # Hint: Flatten -> [Linear -> ReLU -> Dropout] * N_layers -> Linear
+        # 1. Calculate input size (Flatten the image: 3 * 96 * 96 = 27648)
+        self.input_dim = input_shape[0] * input_shape[1] * input_shape[2]
         
-        pass
+        # 2. Define Layers
+        # We'll use a simple 2-layer MLP: Input -> Hidden (128) -> Output
+        self.flatten = nn.Flatten()
+        
+        self.layers = nn.Sequential(
+            nn.Linear(self.input_dim, 128),
+            nn.ReLU(),
+            nn.Dropout(0.2), # Good practice to prevent overfitting
+            nn.Linear(128, 64),
+            nn.ReLU(),
+            nn.Linear(64, num_classes) 
+        )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        # TODO: Implement forward pass
-        pass
+        # x shape: [Batch_Size, 3, 96, 96]
+        x = self.flatten(x) 
+        # x shape: [Batch_Size, 27648]
+        logits = self.layers(x)
+        return logits  

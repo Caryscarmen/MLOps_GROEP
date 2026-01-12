@@ -55,19 +55,18 @@ class PCAMDataset(Dataset):
         return len(self.indices)
 
     def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor]:
-        # TODO: Implement data retrieval
-        # 1. Read data at idx
-        # 2. Convert to uint8 (for PIL compatibility if using transforms)
-        # 3. Apply transforms if they exist
-        # 4. Return tensor image and label (as long)
-        # Read specific index
-        # Map the dataloader's index (0...97) to the actual file index (e.g., 0, 3, 4...)
         real_idx = self.indices[idx]
 
-        image = self.x_data[real_idx]     # <--- Use real_idx
-        label = self.y_data[real_idx][0]  # <--- Use real_idx
+        image = self.x_data[real_idx]     
+        label = self.y_data[real_idx][0] 
 
-        # Ensure uint8 for PIL compatibility
+        # --- FIX: Sanitize Data (Added for Question 9) ---
+        # 1. Replace NaNs (corruption) with 0
+        image = np.nan_to_num(image, copy=False)
+        # 2. Clip values to 0-255 range to prevent overflow errors
+        image = np.clip(image, 0, 255)
+        
+        # Now safe to cast
         image = image.astype(np.uint8)
         
         if self.transform:

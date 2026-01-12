@@ -1,0 +1,19 @@
+experiment_name: "mlp_baseline"
+seed: 42
+device: "cuda"
+
+data:
+  data_path: "/scratch-shared/scur2395/surfdrive"
+  batch_size: 32
+  num_workers: 0
+
+model:
+  name: "mlp"
+  input_shape: [3, 96, 96]
+  num_classes: 1
+  hidden_units: 128
+
+training:
+  epochs: 5
+  learning_rate: 0.001
+  save_dir: "experiments/results"
