@@ -1,11 +1,10 @@
 from pathlib import Path
 from typing import Dict, Tuple
-
-from torch.utils.data import DataLoader
+import numpy as np  # <--- This was missing!
+import torch
+from torch.utils.data import DataLoader, WeightedRandomSampler
 from torchvision import transforms
-
-from .pcam import PCAMDataset
-
+from ml_core.data.pcam import PCAMDataset
 
 def get_dataloaders(config: Dict) -> Tuple[DataLoader, DataLoader]:
     """
@@ -15,40 +14,72 @@ def get_dataloaders(config: Dict) -> Tuple[DataLoader, DataLoader]:
     data_cfg = config["data"]
     base_path = Path(data_cfg["data_path"])
 
-    # TODO: Define Transforms
-    # train_transform = ...
-    # val_transform = ...
-
-    # TODO: Define Paths for X and Y (train and val)
-    
-    # TODO: Instantiate PCAMDataset for train and val
-
-    # TODO: Create DataLoaders
-    # train_loader = ...
-    # val_loader = ...
-    base_transform = transforms . Compose ([
-    transforms . ToPILImage () ,
-    transforms . ToTensor () ,
-    transforms . Normalize ((0.5 , 0.5 , 0.5) , (0.5 , 0.5 , 0.5) ) ,
+    base_transform = transforms.Compose([
+        transforms.ToPILImage(),
+        transforms.ToTensor(),
+        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
     ])
+
     # Initialize Datasets
-    train_ds = PCAMDataset (
-    str ( base_path / " cam elyonpatch_level_2_split_t rain_x . h5 " ) ,
-    str ( base_path / " cam elyonpatch_level_2_split_t rain_y . h5 " ) ,
-    transform = base_transform
+    # Enable filtering for train (to remove black/white slides)
+    train_ds = PCAMDataset(
+        str(base_path / "camelyonpatch_level_2_split_train_x.h5"),
+        str(base_path / "camelyonpatch_level_2_split_train_y.h5"),
+        transform=base_transform,
+        filter_data=True 
     )
-    val_ds = PCAMDataset (
-    str ( base_path / " cam elyonpatch_level_2_split_v alid_x . h5 " ) ,
-    str ( base_path / " cam elyonpatch_level_2_split_v alid_y . h5 " ) ,
-    transform = base_transform
+    
+    val_ds = PCAMDataset(
+        str(base_path / "camelyonpatch_level_2_split_valid_x.h5"),
+        str(base_path / "camelyonpatch_level_2_split_valid_y.h5"),
+        transform=base_transform,
+        filter_data=False
     )
-    # Create Loaders
-    train_loader = DataLoader (
-    train_ds , batch_size = data_cfg [ " batch_size " ] ,
-    shuffle = True , num_workers = data_cfg [ " num_workers " ]
+
+    # --- Calculate Weights for Imbalance Handling ---
+    # We need to tell PyTorch: "Pick Class 1 more often because it is rare"
+    
+    # 1. Get all labels from the training set
+    # Note: We use the indices map we created in pcam.py to get only valid labels
+    train_labels = []
+    for i in train_ds.indices:
+        # Extract the label (0 or 1)
+        train_labels.append(train_ds.y_data[i][0,0,0]) 
+    
+    train_labels = np.array(train_labels)
+    
+    # 2. Count how many 0s and 1s we have
+    class_counts = np.bincount(train_labels.flatten())
+    
+    # 3. Compute weight: 1 / frequency
+    # If Class 0 has 100 samples, weight is 0.01
+    # If Class 1 has 10 samples, weight is 0.1 (10x higher priority)
+    class_weights = 1. / class_counts
+    
+    # 4. Assign a weight to EVERY single sample in the dataset
+    sample_weights = class_weights[train_labels]
+    
+    # 5. Create the Sampler
+    sampler = WeightedRandomSampler(
+        weights=torch.from_numpy(sample_weights).double(),
+        num_samples=len(sample_weights),
+        replacement=True
     )
-    val_loader = DataLoader (
-    val_ds , batch_size = data_cfg [ " batch_size " ] ,
-    shuffle = False , num_workers = data_cfg [ " num_workers " ]
+
+    # --- Create Loaders with the Sampler ---
+    train_loader = DataLoader(
+        train_ds, 
+        batch_size=data_cfg["batch_size"],
+        sampler=sampler,          # <--- INJECT SAMPLER HERE
+        shuffle=False,            # <--- MUST BE FALSE when using a sampler
+        num_workers=data_cfg["num_workers"]
     )
-    return train_loader , val_loader
+    
+    val_loader = DataLoader(
+        val_ds, 
+        batch_size=data_cfg["batch_size"],
+        shuffle=False, 
+        num_workers=data_cfg["num_workers"]
+    )
+    
+    return train_loader, val_loader

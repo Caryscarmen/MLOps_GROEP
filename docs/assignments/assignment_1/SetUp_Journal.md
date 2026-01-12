@@ -169,8 +169,47 @@ tests/test_imports.py .                                                   [100%]
 ---
 
 ## Question 7: The Data Pipeline
-1. **Implementation:** `[Paste __getitem__ method]`
-2. **Local Pytest:** `[Paste output of pytest tests/test_pcam_pipeline.py]`
+1. **Implementation:** 
+<pre>
+    def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor]:
+        # Read specific index
+        # Map the dataloader's index (0...97) to the actual file index (e.g., 0, 3, 4...)
+        real_idx = self.indices[idx]
+
+        image = self.x_data[real_idx]     # <--- Use real_idx
+        label = self.y_data[real_idx][0]  # <--- Use real_idx
+
+        # Ensure uint8 for PIL compatibility
+        image = image.astype(np.uint8)
+        
+        if self.transform:
+            image = self.transform(image)
+            
+        return image, torch.tensor(label, dtype=torch.long).squeeze()
+</pre>
+2. **Local Pytest:** When running the test initially, I encountered three main failures.
+   1. FileNotFoundError / Key Errors:
+      * The error: The code copy-pasted from the PDF contained formatting problems specifically extra spaces in filenames `" cam elyon . . ."` and dictionary keys (e.g., `" batch_size "`).
+      * The Fix: I cleaned up the strings in `loader.py` to match the exact filenames on disk and the keys in the configuration dictionary.
+   2. The heuristic filter test failed
+      * The error: The test expected the dataset to filter out broken images (pure black or white slides), but my `PCAMDataset` class was returning the full length instead of the filtered length.
+      * The fix: I implemented filtering logic in `src/ml_core/data/pcam.py`. I added a loop in `__init__` to check the mean pixel values, stored valid indices in self.indices, and updated `__getitem__` to retreive data using this mapped index.
+   3. The weighted sampling test failed
+      * The error: The test expected the data loader t o balance the classes (showing more "Tumor" samples than "Normal"), but the initial implementation just used `shuffle=True`. This resulted in too few positive samples in the batch.
+      * The fix: I updated `src/ml_core/data/loader.py` to calculate class weights based on the training data labels. I then did a `WeightedRandomSampler' with these weights to give it then to the DataLoader (setting shuffle=False).
+
+<pre>
+(venv) scur2395@int6:~/MLOps_2026$ pytest tests/test_data_loader.py
+============================== test session starts ==============================
+platform linux -- Python 3.9.21, pytest-8.4.2, pluggy-1.6.0
+rootdir: /gpfs/home3/scur2395/MLOps_2026
+configfile: pyproject.toml
+collected 4 items                                                               
+
+tests/test_data_loader.py ....                                            [100%]
+
+============================== 4 passed in 10.69s ===============================
+</pre>
 3. **CI Pipeline:**
    - **Screenshot:** ![GitHub Actions Tab](assets/github_actions.png)
    - **Reflection:** [CI vs Local discrepancies]
