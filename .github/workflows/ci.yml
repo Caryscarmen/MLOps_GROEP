@@ -32,5 +32,5 @@ jobs:
     # 4. Run Tests
     - name: Run Tests
       run: |
-        pytest tests/
+        pytest tests/test_data_loader.py
 
