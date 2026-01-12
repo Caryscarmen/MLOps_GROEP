@@ -36,6 +36,7 @@
 ## Question 2: Environment Setup
 1. **Setup Sequence:**
    - **Commands:** 
+   ```bash
     12  module purge
     13  module load 2025
     14  module load Python/3.13.1-GCCcore-14.2.0
@@ -44,6 +45,7 @@
     17  source venv/bin/activate
     18  pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
     19  python -c "import torch; print(f'PyTorch: {torch.__version__}'); print(f'CUDA available: {torch.cuda.is_available()}')"
+    ```
    - **Full Venv Path:** `/gpfs/home3/scur2395/MLOps_2026/venv'
 
 2. **Pip Install Torch:**
@@ -81,7 +83,7 @@ experiments/results/
    * `.env`: This file often contains sensitive API keys or secrets that should never be leaked to a public or shared repository
    - **README info:** Yes the README should document how to access Snellius and load specific modules like the 2025 stack. Without this, the "Quick Start" commands woudl fail because the system wouldn't know which Python version to use.
 4. **Git Log:** aafcd55 (HEAD -> main, origin/main, origin/HEAD) updated readme.md
-``` text
+```bash
 5ec32b3 Update gitignore and add initial journal questions
 880d065 Merge pull request #2 from SURF-ML/example_script
 d2187cb example lecture 2 week 1
@@ -106,7 +108,7 @@ e8582f8 Initial commit
 2. **Job ID & Stats:** 
 * Job ID: 18243188
 * Stats: 
-```text
+```bash
 JobID                      Start                 End    Elapsed      State 
 ------------ ------------------- ------------------- ---------- ---------- 
 18243188     2026-01-11T21:08:15 2026-01-11T21:08:25   00:00:10  COMPLETED 
@@ -153,7 +155,7 @@ We use clusters because they provide parallel computing power that a laptop can'
     Also when I ran `pip install -e .` I received a `TOMLDecodeError` because I had forgotten to use quotes and commas in my pyproject.toml dependencies list. This prevented the ml_core package from being installed into my venv.
 2. **Import Abstraction:** Abstraction. If you change the filename later you only have to update the init (like receptionist). Instead of updating every single file in the project to update the path.
 3. **Pytest Result:** 
-<pre>
+```bash
 (venv) scur2395@int4:~/MLOps_2026$ pytest tests/test_imports.py
 ============================== test session starts ==============================
 platform linux -- Python 3.9.21, pytest-8.4.2, pluggy-1.6.0
@@ -164,13 +166,13 @@ collected 1 item
 tests/test_imports.py .                                                   [100%]
 
 =============================== 1 passed in 5.80s ===============================
-</pre>
+```
 
 ---
 
 ## Question 7: The Data Pipeline
 1. **Implementation:** 
-<pre>
+```bash
     def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor]:
         # Read specific index
         # Map the dataloader's index (0...97) to the actual file index (e.g., 0, 3, 4...)
@@ -186,7 +188,7 @@ tests/test_imports.py .                                                   [100%]
             image = self.transform(image)
             
         return image, torch.tensor(label, dtype=torch.long).squeeze()
-</pre>
+```
 2. **Local Pytest:** When running the test initially, I encountered three main failures.
    1. FileNotFoundError / Key Errors:
       * The error: The code copy-pasted from the PDF contained formatting problems specifically extra spaces in filenames `" cam elyon . . ."` and dictionary keys (e.g., `" batch_size "`).
@@ -198,7 +200,7 @@ tests/test_imports.py .                                                   [100%]
       * The error: The test expected the data loader t o balance the classes (showing more "Tumor" samples than "Normal"), but the initial implementation just used `shuffle=True`. This resulted in too few positive samples in the batch.
       * The fix: I updated `src/ml_core/data/loader.py` to calculate class weights based on the training data labels. I then did a `WeightedRandomSampler' with these weights to give it then to the DataLoader (setting shuffle=False).
 
-<pre>
+```bash
 (venv) scur2395@int6:~/MLOps_2026$ pytest tests/test_data_loader.py
 ============================== test session starts ==============================
 platform linux -- Python 3.9.21, pytest-8.4.2, pluggy-1.6.0
@@ -209,7 +211,7 @@ collected 4 items
 tests/test_data_loader.py ....                                            [100%]
 
 ============================== 4 passed in 10.69s ===============================
-</pre>
+```
 3. **CI Pipeline:**
    - **Screenshot:** ![GitHub Actions Tab](assets/github_actions.png)
    - **Reflection:** Both worked
@@ -225,7 +227,7 @@ tests/test_data_loader.py ....                                            [100%]
 1. **Forward Pass:** The correct input is 3x96x96. You get this by calculating the flattened size of the PCAM images. If i had used the wrong dimension I would get an error.
 2. **Weight Updates:** Checking that the lossi s a number only confirms that the forward pass is working but does not guarantee the model is learning. So its important to verify that the weights actually update.
 3. **Test Output:** 
-<pre>
+```bash
 (venv) scur2395@int6:~/MLOps_2026$ pytest tests/test_model_shapes.py
 ============================== test session starts ==============================
 platform linux -- Python 3.9.21, pytest-8.4.2, pluggy-1.6.0
@@ -236,14 +238,14 @@ collected 2 items
 tests/test_model_shapes.py ..                                             [100%]
 
 ============================== 2 passed in 11.05s ===============================
-</pre>
+```
 
 ---
 ## Question 9: Training Loop & Loss Visualization
 1. **Training Execution:** Submitted jobs via Slurm (`sbatch train_job.sh`) and Node ID: `gcn9`
 2. **Loss Visualization:**
    - **Plot:** 
-   <pre>
+```bash
    JobID             State ExitCode     MaxRSS 
 ------------ ---------- -------- ---------- 
 18257481         FAILED      1:0            
@@ -264,7 +266,7 @@ tests/test_model_shapes.py ..                                             [100%]
 18257954.ex+  COMPLETED      0:0            
 18259916         FAILED      1:0            
 18259916.ba+     FAILED      1:0      3674K 
-   </pre>
+```
 
    I unfortunately was not able to generate a plot.
    - **Trajectory Analysis:** 
