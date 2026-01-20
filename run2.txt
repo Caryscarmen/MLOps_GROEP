@@ -1,0 +1,81 @@
+🚀 Setting up fast local storage...
+✅ Found data in your own folder: /scratch-shared/scur2395/surfdrive
+✅ Data copy complete.
+Job ID: 18513706
+Starting Experiment: mlp_baseline
+Using device: cuda
+Reproducibility: Seed ingesteld op 42
+Loading Data...
+Initializing Model...
+Starting Training...
+Epoch 1 | Batch 0/1229 | Loss: 0.6890
+Epoch 1 | Batch 100/1229 | Loss: 0.6326
+Epoch 1 | Batch 200/1229 | Loss: 0.5744
+Epoch 1 | Batch 300/1229 | Loss: 0.5655
+Epoch 1 | Batch 400/1229 | Loss: 0.6154
+Epoch 1 | Batch 500/1229 | Loss: 0.5164
+Epoch 1 | Batch 600/1229 | Loss: 0.5263
+Epoch 1 | Batch 700/1229 | Loss: 0.5242
+Epoch 1 | Batch 800/1229 | Loss: 0.5117
+Epoch 1 | Batch 900/1229 | Loss: 0.4948
+Epoch 1 | Batch 1000/1229 | Loss: 0.5639
+Epoch 1 | Batch 1100/1229 | Loss: 0.4911
+Epoch 1 | Batch 1200/1229 | Loss: 0.4230
+Epoch [1/5] | Train Loss: 0.5703 | Val Loss: 0.5347
+Epoch 2 | Batch 0/1229 | Loss: 0.4551
+Epoch 2 | Batch 100/1229 | Loss: 0.4827
+Epoch 2 | Batch 200/1229 | Loss: 0.5781
+Epoch 2 | Batch 300/1229 | Loss: 0.5700
+Epoch 2 | Batch 400/1229 | Loss: 0.4897
+Epoch 2 | Batch 500/1229 | Loss: 0.4277
+Epoch 2 | Batch 600/1229 | Loss: 0.5499
+Epoch 2 | Batch 700/1229 | Loss: 0.4957
+Epoch 2 | Batch 800/1229 | Loss: 0.5019
+Epoch 2 | Batch 900/1229 | Loss: 0.5216
+Epoch 2 | Batch 1000/1229 | Loss: 0.5053
+Epoch 2 | Batch 1100/1229 | Loss: 0.5340
+Epoch 2 | Batch 1200/1229 | Loss: 0.4362
+Epoch [2/5] | Train Loss: 0.4858 | Val Loss: 0.5766
+Epoch 3 | Batch 0/1229 | Loss: 0.4522
+Epoch 3 | Batch 100/1229 | Loss: 0.4846
+Epoch 3 | Batch 200/1229 | Loss: 0.4237
+Epoch 3 | Batch 300/1229 | Loss: 0.4468
+Epoch 3 | Batch 400/1229 | Loss: 0.4747
+Epoch 3 | Batch 500/1229 | Loss: 0.3955
+Epoch 3 | Batch 600/1229 | Loss: 0.4785
+Epoch 3 | Batch 700/1229 | Loss: 0.4470
+Epoch 3 | Batch 800/1229 | Loss: 0.4584
+Epoch 3 | Batch 900/1229 | Loss: 0.4582
+Epoch 3 | Batch 1000/1229 | Loss: 0.4440
+Epoch 3 | Batch 1100/1229 | Loss: 0.5135
+Epoch 3 | Batch 1200/1229 | Loss: 0.4234
+Epoch [3/5] | Train Loss: 0.4459 | Val Loss: 0.6677
+Epoch 4 | Batch 0/1229 | Loss: 0.3658
+Epoch 4 | Batch 100/1229 | Loss: 0.3687
+Epoch 4 | Batch 200/1229 | Loss: 0.4343
+Epoch 4 | Batch 300/1229 | Loss: 0.3849
+Epoch 4 | Batch 400/1229 | Loss: 0.3573
+Epoch 4 | Batch 500/1229 | Loss: 0.3760
+Epoch 4 | Batch 600/1229 | Loss: 0.3924
+Epoch 4 | Batch 700/1229 | Loss: 0.3955
+Epoch 4 | Batch 800/1229 | Loss: 0.4191
+Epoch 4 | Batch 900/1229 | Loss: 0.3699
+Epoch 4 | Batch 1000/1229 | Loss: 0.3283
+Epoch 4 | Batch 1100/1229 | Loss: 0.4649
+Epoch 4 | Batch 1200/1229 | Loss: 0.3805
+Epoch [4/5] | Train Loss: 0.4081 | Val Loss: 0.7170
+Epoch 5 | Batch 0/1229 | Loss: 0.4319
+Epoch 5 | Batch 100/1229 | Loss: 0.3826
+Epoch 5 | Batch 200/1229 | Loss: 0.3241
+Epoch 5 | Batch 300/1229 | Loss: 0.4100
+Epoch 5 | Batch 400/1229 | Loss: 0.2851
+Epoch 5 | Batch 500/1229 | Loss: 0.3593
+Epoch 5 | Batch 600/1229 | Loss: 0.4097
+Epoch 5 | Batch 700/1229 | Loss: 0.4871
+Epoch 5 | Batch 800/1229 | Loss: 0.3159
+Epoch 5 | Batch 900/1229 | Loss: 0.3627
+Epoch 5 | Batch 1000/1229 | Loss: 0.3766
+Epoch 5 | Batch 1100/1229 | Loss: 0.3475
+Epoch 5 | Batch 1200/1229 | Loss: 0.4143
+Epoch [5/5] | Train Loss: 0.3751 | Val Loss: 0.7829
+Training Complete. Metrics saved to experiments/results/metrics.json
