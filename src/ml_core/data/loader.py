@@ -41,12 +41,12 @@ def get_dataloaders(config: Dict) -> Tuple[DataLoader, DataLoader]:
     
     # 1. Get all labels from the training set
     # Note: We use the indices map we created in pcam.py to get only valid labels
-    train_labels = []
-    for i in train_ds.indices:
-        # Extract the label (0 or 1)
-        train_labels.append(train_ds.y_data[i][0,0,0]) 
+    # PASTE THIS INSTEAD
+    # 1. Load ALL labels into memory first (Fast! ~1MB total)
+    all_labels = train_ds.y_data[:].flatten()
     
-    train_labels = np.array(train_labels)
+    # 2. Select only the valid indices (handling the filter)
+    train_labels = all_labels[train_ds.indices]
     
     # 2. Count how many 0s and 1s we have
     class_counts = np.bincount(train_labels.flatten())

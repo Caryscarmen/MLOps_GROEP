@@ -8,7 +8,7 @@
 #SBATCH --gpus=1
 #SBATCH --cpus-per-task=2
 #SBATCH --mem=16G
-#SBATCH --time=00:15:00
+#SBATCH --time=02:00:00
 
 # 1. Load Modules
 module purge
@@ -25,4 +25,4 @@ echo "Node: $SLURMD_NODENAME"
 python -c "import torch; print(f'CUDA: {torch.cuda.is_available()}')"
 
 # 4. Run Training
-python experiments/train.py --config experiments/configs/config.yaml
+python -u experiments/train.py --config experiments/configs/config.yaml

@@ -50,16 +50,23 @@ def main(config_path):
         train_loss = 0.0
         
         # --- TRAIN ---
-        for images, labels in train_loader:
+        print("DEBUG: Asking DataLoader for a batch...")  # <--- ADD THIS
+        # --- TRAIN ---
+        # 1. Wrap the loader with enumerate to count batches
+        for batch_idx, (images, labels) in enumerate(train_loader):
             images, labels = images.to(device), labels.to(device).float()
             
             optimizer.zero_grad()
-            outputs = model(images).squeeze() # Shape [Batch]
+            outputs = model(images).squeeze() 
             loss = criterion(outputs, labels)
             loss.backward()
             optimizer.step()
             
             train_loss += loss.item()
+
+            # 2. Print status every 100 batches
+            if batch_idx % 100 == 0:
+                print(f"Epoch {epoch+1} | Batch {batch_idx}/{len(train_loader)} | Loss: {loss.item():.4f}")
         
         avg_train_loss = train_loss / len(train_loader)
         

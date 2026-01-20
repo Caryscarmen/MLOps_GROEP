@@ -1,0 +1,13 @@
+Job ID: 18506892
+Node: gcn9
+CUDA: True
+Starting Experiment: mlp_baseline
+Using device: cuda
+Loading Data...
+Initializing Model...
+Starting Training...
+DEBUG: Asking DataLoader for a batch...
+Epoch 1 | Batch 0/4916 | Loss: 0.6909
+Epoch 1 | Batch 100/4916 | Loss: 1.2340
+Epoch 1 | Batch 200/4916 | Loss: 0.8310
+Epoch 1 | Batch 300/4916 | Loss: 0.6849
