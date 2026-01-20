@@ -9,3 +9,8 @@ venv/
 data/
 *.pt 
 
+train_*_output_*.txt
+train_*_error_*.txt
+
+slurm*.out
+

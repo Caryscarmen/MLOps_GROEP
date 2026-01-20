@@ -1,3 +1,7 @@
+import random
+import numpy as np
+import torch
+
 import argparse
 import yaml
 import torch
@@ -10,6 +14,20 @@ import json
 from ml_core.data.loader import get_dataloaders
 from ml_core.models.mlp import MLP
 
+def set_seed(seed):
+    """Zet alle seeds vast voor volledige reproduceerbaarheid.""" 
+    random.seed(seed) #Lost non-determinism op bij library modules.
+    np.random.seed(seed)  #Lost non-determinism op bij library modules.
+    torch.manual_seed(seed) #Lost non-determinism op bij model initialisatie.
+    torch.cuda.manual_seed(seed) 
+    torch.cuda.manual_seed_all(seed)
+
+    #voor het vastzetten van de gpu gedrag, door PyTorch te dwingen om         altijd hetzelfde pad te kiezen.
+    torch.backends.cudnn.deterministic = True 
+    torch.backends.cudnn.benchmark = False 
+    print(f"Reproducibility: Seed ingesteld op {seed}")
+
+
 def main(config_path):
     # 1. Load Config
     with open(config_path, "r") as f:
@@ -20,8 +38,11 @@ def main(config_path):
     print(f"Using device: {device}")
 
     # 2. Prepare Data
+    set_seed(cfg['seed'])
     print("Loading Data...")
     train_loader, val_loader = get_dataloaders(cfg)
+
+
     
     # 3. Initialize Model
     print("Initializing Model...")
@@ -67,6 +88,11 @@ def main(config_path):
             # 2. Print status every 100 batches
             if batch_idx % 100 == 0:
                 print(f"Epoch {epoch+1} | Batch {batch_idx}/{len(train_loader)} | Loss: {loss.item():.4f}")
+            
+            # 3. --- SHORT CIRCUIT FOR TESTING ---
+            if batch_idx >= 50: 
+                print("DEBUG: Stopping early for reproducibility check.")
+                break
         
         avg_train_loss = train_loss / len(train_loader)
         

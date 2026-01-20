@@ -6,6 +6,11 @@ from torch.utils.data import DataLoader, WeightedRandomSampler
 from torchvision import transforms
 from ml_core.data.pcam import PCAMDataset
 
+def seed_worker(worker_id):
+    worker_seed = torch.initial_seed() % 2**32
+    np.random.seed(worker_seed)
+    random.seed(worker_seed)
+
 def get_dataloaders(config: Dict) -> Tuple[DataLoader, DataLoader]:
     """
     Factory function to create Train and Validation DataLoaders
@@ -19,6 +24,11 @@ def get_dataloaders(config: Dict) -> Tuple[DataLoader, DataLoader]:
         transforms.ToTensor(),
         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
     ])
+
+    # Create generator
+    seed = config.get("seed", 42)
+    g = torch.Generator()
+    g.manual_seed(seed)
 
     # Initialize Datasets
     # Enable filtering for train (to remove black/white slides)
@@ -63,7 +73,8 @@ def get_dataloaders(config: Dict) -> Tuple[DataLoader, DataLoader]:
     sampler = WeightedRandomSampler(
         weights=torch.from_numpy(sample_weights).double(),
         num_samples=len(sample_weights),
-        replacement=True
+        replacement=True,
+        generator=g
     )
 
     # --- Create Loaders with the Sampler ---
@@ -72,14 +83,18 @@ def get_dataloaders(config: Dict) -> Tuple[DataLoader, DataLoader]:
         batch_size=data_cfg["batch_size"],
         sampler=sampler,          # <--- INJECT SAMPLER HERE
         shuffle=False,            # <--- MUST BE FALSE when using a sampler
-        num_workers=data_cfg["num_workers"]
+        num_workers=data_cfg["num_workers"],
+        worker_init_fn=seed_worker,  
+        generator=g
     )
     
     val_loader = DataLoader(
         val_ds, 
         batch_size=data_cfg["batch_size"],
         shuffle=False, 
-        num_workers=data_cfg["num_workers"]
+        num_workers=data_cfg["num_workers"],
+        worker_init_fn=seed_worker,  
+        generator=g
     )
     
     return train_loader, val_loader
