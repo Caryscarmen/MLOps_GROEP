@@ -71,8 +71,6 @@ def main(config_path):
         train_loss = 0.0
         
         # --- TRAIN ---
-        print("DEBUG: Asking DataLoader for a batch...")  # <--- ADD THIS
-        # --- TRAIN ---
         # 1. Wrap the loader with enumerate to count batches
         for batch_idx, (images, labels) in enumerate(train_loader):
             images, labels = images.to(device), labels.to(device).float()
@@ -88,11 +86,6 @@ def main(config_path):
             # 2. Print status every 100 batches
             if batch_idx % 100 == 0:
                 print(f"Epoch {epoch+1} | Batch {batch_idx}/{len(train_loader)} | Loss: {loss.item():.4f}")
-            
-            # 3. --- SHORT CIRCUIT FOR TESTING ---
-            if batch_idx >= 50: 
-                print("DEBUG: Stopping early for reproducibility check.")
-                break
         
         avg_train_loss = train_loss / len(train_loader)
         
