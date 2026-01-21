@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/gpfs/home3/scur2262/MLOps_GROEP/./experiments/train.py", line 316, in <module>
+    main(args.config)
+    ~~~~^^^^^^^^^^^^^
+  File "/gpfs/home3/scur2262/MLOps_GROEP/./experiments/train.py", line 125, in main
+    with open(config_path, "r") as f:
+         ~~~~^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'experiments/configs/base_config.yaml'

@@ -1,12 +1,10 @@
 #!/bin/bash
-#SBATCH --job-name=gpu_bench_small
-#SBATCH --partition=gpu_course
-#SBATCH --gres=gpu:1
-#SBATCH --cpus-per-task=2
-#SBATCH --mem=8G
-#SBATCH --time=00:10:00
-#SBATCH --array=0-5%1
-#SBATCH --output=gpu_bench_small_%A_%a.out
+#SBATCH --account=gpuuva069
+#SBATCH --partition=rome          # De CPU partitie (werkt altijd)
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=32G
+#SBATCH --time=00:30:00           # Kortere tijd voor een test
 
 # 1. Omgeving klaarmaken
 module purge
@@ -14,10 +12,6 @@ module load 2023 Python/3.11.3-GCCcore-12.3.0
 source venv/bin/activate
 export PYTHONPATH=$PYTHONPATH:.
 
-# 2. Training starten (Vraag 5)
-# Dit maakt je checkpoints en config aan
-TRAIN_SCRIPT=$(find . -name "train.py" | head -n 1)
-
-# 3. Analyse starten (Vraag 6)
-# Dit script pakt automatisch de resultaten van de stap hierboven
-python $TRAIN_SCRIPT --config experiments/configs/base_config.yaml
+# 2. Start de training/analyse
+# We voegen '--epochs 1' toe zodat we snel zien of het werkt
+python train.py --config experiments/configs/base_config.yaml --epochs 1

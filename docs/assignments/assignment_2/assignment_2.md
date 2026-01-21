@@ -318,12 +318,19 @@ Loading Checkpoints for New Data: To use the saved model on new, unseen data (In
 ---
 
 ## Question 6: Model Slicing & Error Analysis
+* Global F2: 0.7645
+Dark Slice F2: 0.4336
+Performance Gap: 0.3308
+
+![False Positives](experiments/results/mlp_baseline/analysis/fps.png)
+![False Negatives](experiments/results/mlp_baseline/analysis/fns.png)
+
 1. **Visual Error Patterns:**
-
+* Based on the qualitative visualization, a clear pattern emerged. False Negatives often occur in tissue patches with significant white space or lower cellular density, where the model fails to detect malignant clusters. Conversely, False Positives are frequent in patches with dense H&E staining or high-contrast artifacts, which the model likely misinterprets as cancerous activity.
 2. **The "Slice":**
-
+* I defined the 'Dark Slice' as the bottom 10% of images based on mean pixel intensity to test the model's sensitivity to underexposed scans. While the Global F2-score was 0.7645, the performance on the Dark Slice dropped significantly to 0.4336. This reveals a massive Performance Gap of 0.3308, indicating that our model is highly unreliable on darker histology slides.
 3. **Risks of Silent Failure:**
-
+* Monitoring only global metrics like F1-score is dangerous because they mask catastrophic failures on specific subgroups. In a clinical setting, our model would look 'good' on average ($F_2 \approx 0.76$), but it would fail to diagnose nearly half of the patients if their biopsy slides were slightly darker or processed with different equipment. This systematic bias would remain hidden without slicing, potentially leading to missed cancers in specific laboratory environments.
 ---
 
 ## Question 7: Team Collaboration and CI/CD
