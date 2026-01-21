@@ -59,10 +59,24 @@
 
 | User | Run # | Final Train Loss | Final Val Loss | Result |
 | :--- | :---: | :--- | :--- | :--- |
-| **Sam** | 1 | 0.3751 | 0.7829 | — |
-| **Sam** | 2 | 0.007548 | 0.564752 | ✅ Match |
-| **[Teammate]** | 1 | 0.007548 | 0.564752 | ✅ Match |
-| **[Teammate]** | 2 | 0.007548 | 0.564752 | ✅ Match |
+| **Sam** | 1 | 0.4929 | 0.6326 | — |
+| **Sam** | 2 | 0.4929 | 0.6326 | ✅ Match |
+| **Carys** | 1 | 0.4929 | 0.6326 | ✅ Match |
+| **Carys** | 2 | 0.4929 | 0.6326 | ✅ Match |
+| **Aye** | 1 | 0.4929 | 0.6326 | ✅ Match |
+| **Aye** | 2 | 0.4929 | 0.6326 | ✅ Match |
+
+Sam
+![sam1](assets/run1sam.png)
+![sam2](assets/run2sam.png)
+
+Carys
+![carys1](assets/run1carys.jpeg)
+![carys2](assets/run2carys.jpeg)
+
+Aye
+![aye1](assets/run1aye.png)
+![aye2](assets/run2aye.png)
 
 ---
 ### 2. Leakage Prevention
