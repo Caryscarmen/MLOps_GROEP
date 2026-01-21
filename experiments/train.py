@@ -95,7 +95,6 @@ def main(config_path):
                     total_norm += param_norm.item()**2
             total_norm = total_norm ** 0.5
             history["grad_norms"].append(total_norm)
-            optimizer.step()
 
             optimizer.step()
             

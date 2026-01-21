@@ -65,17 +65,30 @@
 | **[Teammate]** | 2 | 0.007548 | 0.564752 | ✅ Match |
 
 ---
+### 2. Leakage Prevention
 
-## Question 2: Data, Partitioning, and Leakage Audit
-1. **Partitioning Strategy:**
+To prevent data leakage, we ensure that information from the test set does not influence the training process. Specifically:
 
-2. **Leakage Prevention:**
-   
-3. **Cross-Validation Reflection:**
+- **Normalization:** We calculate the mean and standard deviation only on the **training set**. These fixed values are then applied to normalize the validation and test sets during the inference/evaluation phase.
+- **Data Augmentation:** All transformations (such as flipping or rotation) are applied strictly to the training pipeline and never to the validation or test sets.
 
-4. **The Dataset Size Mystery:**
+### 3. Cross-Validation Reflection
 
-5. **Poisoning Analysis:**
+While K-Fold Cross-Validation is excellent for small datasets to reduce variance, it is not suitable for the PCAM dataset in this environment. Given that the training set exceeds 150,000 images and deep learning models take significant time to converge on the Snellius GPUs, the computational cost of training $K$ models would be prohibitive. Instead, a fixed **Hold-out** strategy (Train/Val/Test) is used for efficient hyperparameter optimization.
+
+### 4. The Dataset Size Mystery
+
+We observed that our `camelyonpatch_level_2_split_train_x.h5` file is disproportionately large (approximately 17GB) compared to the original 6GB full PCAM dataset.
+
+- **Finding:** Upon inspection using `h5py`, we discovered that the `Compression Type` is `None`.
+- **Reason:** The original PCAM dataset uses internal HDF5 compression (such as GZIP or LZF). Our subset stores raw pixel values ($96 \times 96 \times 3$ per image). This lack of compression results in a much larger footprint on the Snellius disk despite having fewer samples.
+
+### 5. Poisoning Analysis
+
+Our inspection of the training samples (saved in `assets/poisoning_check.png`) revealed evidence of a **Backdoor/Trigger Attack**.
+
+- **Observation:** Visual analysis of several samples showed consistent artificial artifacts—specifically small, high-contrast pixel blocks (triggers) in the images.
+- **Impact:** This is a form of poisoning where the model might learn to associate the artificial trigger with a specific label rather than learning the actual biological features of the tissue.
 
 ---
 
@@ -210,10 +223,32 @@ Data Path: Specifies the location of the PCAM files on the Snellius server.
 
 ---
 
-## Question 9: Documentation & README
-1. **README Link:** [Link to your Group Repo README]
-2. **README Sections:** [Confirm Installation, Data Setup, Training, and Inference are present.]
-3. **Offline Handover:** [List the files required on a USB stick to run the model offline.]
+## Question 9: Reproducibility and Handover
+
+### 1. Repository Link
+
+The comprehensive README.md and the source code for our project can be found here:
+
+- https://github.com/Caryscarmen/MLOps_GROEP/blob/main/README.md
+
+### 2. README.md Sections
+
+Our README.md is designed to allow any engineer to set up our project within minutes. It includes:
+
+- **Installation:** Steps to create the environment and install dependencies.
+- **Data Setup:** Instructions on where to place the H5 files.
+- **Training:** The exact command to reproduce our best MLP model.
+- **Inference:** How to run a single prediction using our saved checkpoint via `inference.py`.
+
+### 3. The "USB Stick" Scenario (Offline Portability)
+
+To run this model on a cluster with no internet access, a teammate would need the following files on a USB stick:
+
+1. **The Codebase:** A full clone of our GitHub repository (including `src/` and `inference.py`).
+2. **Model Weights:** The trained `models/best_model.pt` file.
+3. **The Dataset:** The specific `.h5` files (which are too large to be hosted on GitHub).
+4. **Library Dependencies (Wheels):** Pre-downloaded Python `.whl` files for `torch`, `h5py`, and `numpy`, as `pip install` will not work without an internet connection.
+5. **Configuration:** Any specific environment variables or paths used in the cluster setup.
 
 ---
 

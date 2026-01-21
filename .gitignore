@@ -1,7 +1,7 @@
 __pycache__/
 *.pyc
 experiments/logs/
-experiments/results/
+experiments/results*/
 .env
 .DS_Store
 *.egg-info/
