@@ -1,10 +1,10 @@
 #!/bin/bash
 #SBATCH --account=gpuuva069
-#SBATCH --partition=rome          # De CPU partitie (werkt altijd)
+#SBATCH --partition=rome 
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=32G
-#SBATCH --time=00:30:00           # Kortere tijd voor een test
+#SBATCH --time=00:30:00   
 
 # 1. Omgeving klaarmaken
 module purge

@@ -1,7 +1,7 @@
 import json
 import matplotlib.pyplot as plt
 import os
-import glob  # <--- Added this to find the job folders
+import glob 
 
 def plot_gradients(results_paths, output_file="gradient_norms_comparison.png"):
     """
@@ -50,16 +50,15 @@ def plot_gradients(results_paths, output_file="gradient_norms_comparison.png"):
     # plt.show() # Uitgezet omdat je op een server zit (geen scherm)
 
 if __name__ == "__main__":
-    # --- HELPER FUNCTION: Find the latest metrics file automatically ---
     def get_latest_metrics(base_folder):
-        # Zoek naar jobs zoals: experiments/results_seed42/job_12345/metrics.json
+        # Zoek naar jobs zoals
         pattern = os.path.join(base_folder, "job_*", "metrics.json")
         found_files = glob.glob(pattern)
         
         if not found_files:
             return None
         
-        # Pak de nieuwste (laatst gewijzigde)
+        # Pak de nieuwste
         return max(found_files, key=os.path.getmtime)
 
     # 1. Definieer de mappen waar de seeds staan
@@ -81,5 +80,4 @@ if __name__ == "__main__":
         else:
             print(f"   ⚠️  Nog geen resultaat gevonden in {folder} (Job loopt nog?)")
 
-    # 3. Plotten maar!
     plot_gradients(real_results, output_file="experiments/results/gradient_norms_comparison.png")

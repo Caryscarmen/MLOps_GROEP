@@ -49,15 +49,13 @@ def get_dataloaders(config: Dict) -> Tuple[DataLoader, DataLoader, DataLoader]:
         filter_data=data_cfg["filter_val"]
     )
 
-    # --- NIEUW: Initialize Test Dataset (voor Question 6) ---
     test_ds = PCAMDataset(
         str(base_path / "camelyonpatch_level_2_split_valid_x.h5"), # Verander 'test' naar 'valid'
         str(base_path / "camelyonpatch_level_2_split_valid_y.h5"), # Verander 'test' naar 'valid'
         transform=base_transform,
-        filter_data=False # De testset filteren we meestal niet voor een eerlijke evaluatie
+        filter_data=False
     )
 
-    # --- Sampler logica voor Train ---
     with h5py.File(train_ds.y_path, "r") as f:
         all_labels = f["y"][:].flatten()
     
@@ -73,7 +71,6 @@ def get_dataloaders(config: Dict) -> Tuple[DataLoader, DataLoader, DataLoader]:
         generator=g
     )
 
-    # --- Create Loaders ---
     train_loader = DataLoader(
         train_ds,
         batch_size=data_cfg["batch_size"],
@@ -97,11 +94,10 @@ def get_dataloaders(config: Dict) -> Tuple[DataLoader, DataLoader, DataLoader]:
         persistent_workers=True
     )
 
-    # --- NIEUW: Test Loader (voor Question 6) ---
     test_loader = DataLoader(
         test_ds,
         batch_size=data_cfg["batch_size"],
-        shuffle=False, # NOOIT shuffelen bij error analysis, anders kloppen de indices niet meer!
+        shuffle=False,
         num_workers=data_cfg["num_workers"],
         worker_init_fn=seed_worker,
         generator=g,

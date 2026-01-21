@@ -140,7 +140,7 @@ def main(config_path):
     model = MLP(
         input_shape=cfg['model']['input_shape'], 
         num_classes=cfg['model']['num_classes'],
-        hidden_units=cfg['model']['hidden_units'] # <--- PASS THE ARGUMENT HERE
+        hidden_units=cfg['model']['hidden_units']
     )
     model.to(device)
 

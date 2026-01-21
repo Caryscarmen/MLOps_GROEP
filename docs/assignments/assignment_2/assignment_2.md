@@ -9,6 +9,9 @@
 
 ---
 
+* Note on AI Usage
+We used Gemini, Claude, and GPT-4 as basically a tutor or a second set of eyes throughout this project. It’s hard to figure out the specific quirks of a cluster like Snellius on your own, so we used them to help understand the assignment requirements, learn how to write the SLURM scripts, and figure out how to structure the YAML config files. We also used them to debug weird PyTorch errors and clean up our grammar in the report. We didn't just copy-paste whatever they said; we used them to actually learn the "why" behind things like seeding and data loading so we could explain it ourselves during the oral exam.
+
 ## Question 1: Reproducibility Audit
 1. **Sources of Non-Determinism:**
 * GPU Algorithms: 
@@ -322,8 +325,8 @@ Loading Checkpoints for New Data: To use the saved model on new, unseen data (In
 Dark Slice F2: 0.4336
 Performance Gap: 0.3308
 
-![False Positives](experiments/results/mlp_baseline/analysis/fps.png)
 ![False Negatives](experiments/results/mlp_baseline/analysis/fns.png)
+![False Positives](experiments/results/mlp_baseline/analysis/fps.png)
 
 1. **Visual Error Patterns:**
 * Based on the qualitative visualization, a clear pattern emerged. False Negatives often occur in tissue patches with significant white space or lower cellular density, where the model fails to detect malignant clusters. Conversely, False Positives are frequent in patches with dense H&E staining or high-contrast artifacts, which the model likely misinterprets as cancerous activity.

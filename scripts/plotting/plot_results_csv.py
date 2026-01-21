@@ -32,7 +32,6 @@ def plot_metrics(data: Dict[str, Any], output_path: Optional[Path]):
     fig, axes = plt.subplots(2, 2, figsize=(16, 12))
     
     # 1. Loss & Metrics (Per Epoch)
-    # We gebruiken de lengte van train_loss voor de x-as
     epochs = range(1, len(data.get('train_loss', [])) + 1)
     
     if 'train_loss' in data and 'val_loss' in data:
@@ -56,7 +55,6 @@ def plot_metrics(data: Dict[str, Any], output_path: Optional[Path]):
         axes[1, 0].legend()
 
     # 3. Gradient Norms (Per Batch)
-    # Deze lijst is veel langer, dus we maken een eigen x-as
     if 'grad_norms' in data:
         batches = range(1, len(data['grad_norms']) + 1)
         axes[1, 1].plot(batches, data['grad_norms'], color='purple', alpha=0.6)

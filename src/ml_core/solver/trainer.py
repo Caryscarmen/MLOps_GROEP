@@ -64,5 +64,4 @@ class Trainer:
             # TODO: Log metrics to tracker
             # TODO: Save checkpoints
             pass
-            
-	# Remember to handle the trackers properly
+    
