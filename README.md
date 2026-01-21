@@ -50,3 +50,4 @@ pre-commit install
 ├── pyproject.toml        # Modern config center for tools (Ruff, Pytest) 
 └── .gitignore            # Prevents large data (H5) and venv from being tracked 
 ```
+##assignment2.7.b
