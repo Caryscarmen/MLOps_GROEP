@@ -97,6 +97,14 @@ Data Path: Specifies the location of the PCAM files on the Snellius server.
       data_path: "/scratch-shared/scur2395/surfdrive"
       batch_size: 128
       num_workers: 2
+      filter_train: True
+      filter_val: False
+      normalization:
+         mean: [0.5, 0.5, 0.5]
+         std: [0.5, 0.5, 0.5]
+      sampler:
+         replacement: True
+      shuffle_val: False
 
    model:
       name: "mlp"
@@ -122,6 +130,30 @@ Data Path: Specifies the location of the PCAM files on the Snellius server.
       epochs = cfg['training']['epochs']
    ```
 
+   * loader.py Integration: Instead of fixed booleans, the DataLoader now queries the YAML configuration
+   ```python
+   ## example of loaded parameters:
+   train_loader = DataLoader(
+        train_ds, 
+        batch_size=data_cfg["batch_size"], #1
+        sampler=sampler,
+        shuffle=False,
+        num_workers=data_cfg["num_workers"], #2
+        worker_init_fn=seed_worker,   #3
+        generator=g
+    )
+    
+    val_loader = DataLoader(
+        val_ds, 
+        batch_size=data_cfg["batch_size"], #4
+        shuffle=data_cfg["shuffle_val"], #5
+        num_workers=data_cfg["num_workers"], #6
+        worker_init_fn=seed_worker,  
+        generator=g
+    )
+   ```
+   
+
 3. **Impact Analysis:**
 * Reproducibility: Isolating configuration in a seperate file allows us to track which settings produced a specific result.
 * Experiment Comparison: Comparing different runs is now a matter of comparing YAML files rather than searching through source code.
@@ -139,19 +171,53 @@ Data Path: Specifies the location of the PCAM files on the Snellius server.
 1. **Internal Dynamics:**
 
 2. **Learning Rate Scheduling:**
+* For this experiment, we implemented the ReduceLROnPlateau scheduler. We chose ReduceLROnPlateau because it only reduces the learning rate when the validation loss stops decreasing. Because medical images are complex and the model can get stuck at unpredictable moments, ReduceLROnPlateau is better.
 
+
+* Reducing the learning rate prevents oscillation. As the model approaches the global minimum, large updates can cause the weights to oscillate around the optimum, preventing the loss from decreasing further.
 ---
 
 ## Question 5: Part 1 - Experiment Tracking
 1. **Metrics Choice:**
+
+* We selected ROC-AUC and the F2-Score with $\beta=2$.
+* ROC-AUC is useful because it evaluates the model's ability to distinguish between classes across all possible probability thresholds. In medical diagnostics, it provides a holistic view of the classifier's performance without being biased by a single "cut-off" point.
+* We chose $\beta=2$ to prioritize Recall over Precision. In cancer detection, a False Negative is significantly more dangerous than a False Positive. The $F_2$-score mathematically weights the model to ensure we catch as many positive cases as possible.
+
 
 2. **Results (Average of 3 Seeds):**
 
 3. **Logging Scalability:**
 
 4. **Tracker Initialization:**
+* Our training code initializes the tracker once at the start and interacts with it through a clean API, keeping the training logic separate from the logging logic:
    ```python
    # Snippet showing tracker/MLFlow/W&B initialization
+   # Checkpoint dictionary
+        checkpoint = {
+            "epoch": epoch,
+            "model_state_dict": model.state_dict(),
+            "optimizer_state_dict": optimizer.state_dict(),
+            "train_loss": avg_train_loss,
+            "val_loss": avg_val_loss,
+            "val_roc_auc": val_roc_auc, # 5b
+            "val_f2": val_f2, # 5b
+            "config": cfg
+        }
+
+        tracker.log_metrics(epoch + 1, {
+            "train_loss": avg_train_loss,
+            "val_loss": avg_val_loss,
+            "val_roc_auc": val_roc_auc,
+            "val_f2_score": val_f2,
+            "lr": current_lr
+        })
+
+        
+        #sla het bestand op
+
+        checkpoint_path = tracker.get_save_path(f"checkpoint_epoch_{epoch+1}.pt")
+        torch.save(checkpoint, checkpoint_path)
    ```
 
 5. **Evidence of Logging:**
@@ -159,6 +225,12 @@ Data Path: Specifies the location of the PCAM files on the Snellius server.
 6. **Reproduction & Checkpoint Usage:**
 
 7. **Deployment Issues:**
+* Data drift: 
+* Silent degradation: Can be solved with continuous monitoring.
+* Adversarial inputs: 
+
+
+
 
 ---
 

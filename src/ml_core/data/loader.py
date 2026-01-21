@@ -23,11 +23,14 @@ def get_dataloaders(config: Dict) -> Tuple[DataLoader, DataLoader]:
     base_transform = transforms.Compose([
         transforms.ToPILImage(),
         transforms.ToTensor(),
-        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+        transforms.Normalize(
+            mean=data_cfg["normalization"]["mean"], 
+            std=data_cfg["normalization"]["std"]
+        ),
     ])
 
     # Create generator
-    seed = config.get("seed", 42)
+    seed = config["seed"]
     g = torch.Generator()
     g.manual_seed(seed)
 
@@ -37,14 +40,14 @@ def get_dataloaders(config: Dict) -> Tuple[DataLoader, DataLoader]:
         str(base_path / "camelyonpatch_level_2_split_train_x.h5"),
         str(base_path / "camelyonpatch_level_2_split_train_y.h5"),
         transform=base_transform,
-        filter_data=True 
+        filter_data=data_cfg["filter_train"]
     )
     
     val_ds = PCAMDataset(
         str(base_path / "camelyonpatch_level_2_split_valid_x.h5"),
         str(base_path / "camelyonpatch_level_2_split_valid_y.h5"),
         transform=base_transform,
-        filter_data=False
+        filter_data=data_cfg["filter_val"]
     )
 
     # --- Calculate Weights for Imbalance Handling ---
@@ -74,16 +77,16 @@ def get_dataloaders(config: Dict) -> Tuple[DataLoader, DataLoader]:
     sampler = WeightedRandomSampler(
         weights=torch.from_numpy(sample_weights).double(),
         num_samples=len(sample_weights),
-        replacement=True,
+        replacement=data_cfg["sampler"]["replacement"],
         generator=g
     )
 
     # --- Create Loaders with the Sampler ---
     train_loader = DataLoader(
-        train_ds, 
+        train_ds,
         batch_size=data_cfg["batch_size"],
         sampler=sampler,          # <--- INJECT SAMPLER HERE
-        shuffle=False,            # <--- MUST BE FALSE when using a sampler
+        shuffle=False,            # <--- MUST BE FALSE when using a sampler don't change 
         num_workers=data_cfg["num_workers"],
         worker_init_fn=seed_worker,  
         generator=g
@@ -92,7 +95,7 @@ def get_dataloaders(config: Dict) -> Tuple[DataLoader, DataLoader]:
     val_loader = DataLoader(
         val_ds, 
         batch_size=data_cfg["batch_size"],
-        shuffle=False, 
+        shuffle=data_cfg["shuffle_val"], 
         num_workers=data_cfg["num_workers"],
         worker_init_fn=seed_worker,  
         generator=g
