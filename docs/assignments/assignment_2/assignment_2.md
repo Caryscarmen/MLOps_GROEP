@@ -81,16 +81,57 @@
 
 ## Question 3: Configuration Management
 1. **Centralized Parameters:**
+The following five parameters were identified as critical variables that should not be hard-coded:
+* Learning Rate: This controls the step of the optimizer
+* Batch Size: Determines how many images are processed simultaneously.
+* Epochs: The number of times the model processes the entire dataset.
+* Hidden Units: Defines the model architecture of the MLP.
+Data Path: Specifies the location of the PCAM files on the Snellius server.
 
 2. **Loading Mechanism:**
-   - [Describe your use of YAML, Hydra, or Argparse.]
+   - We used a YAML-based configuration management to begin with.
+
+   * Configuration File (`config.yaml`): The parameters are stored in a structured YAML format.
    ```python
-   # Snippet showing how parameters are loaded
+   data:
+      data_path: "/scratch-shared/scur2395/surfdrive"
+      batch_size: 128
+      num_workers: 2
+
+   model:
+      name: "mlp"
+      input_shape: [3, 96, 96]
+      num_classes: 1
+      hidden_units: 128
+
+   training:
+      epochs: 5
+      learning_rate: 0.001
+      log_interval: 100
+      save_dir: "experiments/results"
+   ```
+   * Loading in `train.py`: We use `yaml.safe_load` to inject these values into the script at runtime. This allows the code to adapt without manual editing:
+   ```python
+   def main(config_path):
+      # 1. Load Config
+      with open(config_path, "r") as f:
+         cfg = yaml.safe_load(f)
+   
+      ## example of loaded parameters:
+      optimizer = optim.Adam(model.parameters(), lr=cfg['training']['learning_rate'])
+      epochs = cfg['training']['epochs']
    ```
 
 3. **Impact Analysis:**
+* Reproducibility: Isolating configuration in a seperate file allows us to track which settings produced a specific result.
+* Experiment Comparison: Comparing different runs is now a matter of comparing YAML files rather than searching through source code.
+* Collaboration: Teammates can run the code on  their own accounts by changing a single line in `config.yaml` instead of editing `train.py`, reducing bugs and conflicts.
 
 4. **Remaining Risks:** 
+* With configuration management there are still some risks:
+* Software Environment: YAML does not track versions of libraries like TORCH or CUDA which can cause discrepancies
+* Data Integrity: The config points to a path but cannot guarantee the data there has not been modified or corrupted.
+* Human Error: Standard YAML files are vulnerable to mistakes like typos.
 
 ---
 

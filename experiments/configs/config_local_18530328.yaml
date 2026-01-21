@@ -3,9 +3,9 @@ seed: 42
 device: "cuda"
 
 data:
-  data_path: "/scratch-shared/scur2395/surfdrive"
+  data_path: "/scratch-local/scur2395.18530328/data"
   batch_size: 128
-  num_workers: 2
+  num_workers: 4
 
 model:
   name: "mlp"

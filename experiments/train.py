@@ -33,16 +33,19 @@ def main(config_path):
     with open(config_path, "r") as f:
         cfg = yaml.safe_load(f)
     
+    # Device
     print(f"Starting Experiment: {cfg['experiment_name']}")
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = torch.device(cfg.get('device', 'cpu'))
+    if device.type == 'cuda' and not torch.cuda.is_available():
+        print("WARNING: CUDA requested in config but not available. Falling back to CPU.")
+        device = torch.device('cpu')
+
     print(f"Using device: {device}")
 
     # 2. Prepare Data
     set_seed(cfg['seed'])
     print("Loading Data...")
     train_loader, val_loader = get_dataloaders(cfg)
-
-
     
     # 3. Initialize Model
     print("Initializing Model...")
@@ -60,7 +63,11 @@ def main(config_path):
 
     # 5. Training Loop
     epochs = cfg['training']['epochs']
-    history = {"train_loss": [], "val_loss": []}
+    history = {
+        "train_loss": [], 
+        "val_loss": [],
+        "grad_norms": []
+        }
     
     save_dir = Path(cfg['training']['save_dir'])
     save_dir.mkdir(parents=True, exist_ok=True)
@@ -79,12 +86,24 @@ def main(config_path):
             outputs = model(images).squeeze() 
             loss = criterion(outputs, labels)
             loss.backward()
+
+            # GRADIENT NORM TRACKING
+            total_norm = 0.0
+            for p in model.parameters():
+                if p.grad is not None:
+                    param_norm = p.grad.data.norm(2)
+                    total_norm += param_norm.item()**2
+            total_norm = total_norm ** 0.5
+            history["grad_norms"].append(total_norm)
+            optimizer.step()
+
             optimizer.step()
             
             train_loss += loss.item()
 
-            # 2. Print status every 100 batches
-            if batch_idx % 100 == 0:
+            # 2. Print status every * batches
+            log_interval = cfg['training'].get('log_interval', 100)
+            if batch_idx % log_interval == 0:
                 print(f"Epoch {epoch+1} | Batch {batch_idx}/{len(train_loader)} | Loss: {loss.item():.4f}")
         
         avg_train_loss = train_loss / len(train_loader)
