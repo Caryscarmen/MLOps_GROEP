@@ -1,11 +1,9 @@
 from pathlib import Path
 from typing import Callable, Optional, Tuple
-
 import h5py
 import numpy as np
 import torch
 from torch.utils.data import Dataset
-
 
 class PCAMDataset(Dataset):
     """
@@ -18,42 +16,48 @@ class PCAMDataset(Dataset):
         self.filter_data = filter_data
         self.transform = transform
 
-        # TODO: Initialize dataset
-        # 1. Check if files exist
-        # MLOps Check : Verify files exist before crashing later
-        if not self.x_path.exists() or not self.y_path.exists () :
+        # 1. Initialize placeholders (Lazy Loading)
+        self.x_data = None
+        self.y_data = None
+
+        # 2. Check if files exist
+        if not self.x_path.exists() or not self.y_path.exists():
             raise FileNotFoundError(f"PCAM files not found at {self.x_path} or {self.y_path}")
-        # 2. Open h5 files in read mode
-        # Open in read mode ( lazy loading with H5 )
-        self.x_data = h5py.File(self.x_path,"r")["x"]
-        self.y_data = h5py.File(self.y_path,"r")["y"]
 
-        # The test expects 'self.indices' to exist.
-        # We will populate it with only the "good" images.
-        self.indices = []
+        # 3. Open file BRIEFLY just to get the length, then close it immediately
+        with h5py.File(self.y_path, "r") as f:
+            full_length = len(f["y"])
 
-        # TEMPORARY FIX: Skip filtering to start training immediately
-        self.indices = list(range(len(self.x_data)))
+        # self.indices = list(range(len(self.x_data)))
+        
+        # -----------------------------------------------------------
+        # SPEED HACK: Train on only 20,000 images (approx 8% of data)
+        # -----------------------------------------------------------
+        limit = 20000 
+        
+        # Safety check: ensure we don't ask for more than exists
+        actual_limit = min(limit, full_length)
+        
+        # Create the list of indices we will use
+        self.indices = list(range(actual_limit))
 
     def __len__(self) -> int:
-        # TODO: Return length of dataset
-        # The dataloader will know hence how many batches to create
         return len(self.indices)
 
     def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor]:
+        # 4. LAZY LOADING: Open file only when a worker actually needs data
+        if self.x_data is None:
+            self.x_data = h5py.File(self.x_path, "r")["x"]
+            self.y_data = h5py.File(self.y_path, "r")["y"]
+
         real_idx = self.indices[idx]
 
         image = self.x_data[real_idx]     
         label = self.y_data[real_idx][0] 
 
-        # --- FIX: Sanitize Data (Added for Question 9) ---
-        # 1. Replace NaNs (corruption) with 0
+        # Sanitization
         image = np.nan_to_num(image, copy=False)
-        # 2. Clip values to 0-255 range to prevent overflow errors
-        image = np.clip(image, 0, 255)
-        
-        # Now safe to cast
-        image = image.astype(np.uint8)
+        image = np.clip(image, 0, 255).astype(np.uint8)
         
         if self.transform:
             image = self.transform(image)

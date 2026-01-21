@@ -152,7 +152,6 @@ def main(config_path):
 
             # Sla de norm op PER BATCH voor de juiste granulariteit
             history["grad_norms"].append(total_norm)
-    
             optimizer.step()
 
             train_loss += loss.item()

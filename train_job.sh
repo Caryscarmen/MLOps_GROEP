@@ -7,7 +7,7 @@
 #SBATCH --ntasks=1
 #SBATCH --gpus=1
 #SBATCH --cpus-per-task=4
-#SBATCH --mem=16G
+#SBATCH --mem=32G
 #SBATCH --time=01:00:00
 
 # 1. Load Modules
@@ -36,7 +36,7 @@ if [ -d "$USER_DATA" ]; then
     SOURCE_DATA="$USER_DATA"
 elif [ -d "$SHARED_DATA" ]; then
     echo "⚠️ Your data folder is empty."
-    echo "✅ borrowing data from Sam's folder: $SHARED_DATA"
+    echo "✅ Borrowing data from Sam's folder: $SHARED_DATA"
     SOURCE_DATA="$SHARED_DATA"
 else
     echo "❌ ERROR: Could not find data in $USER_DATA or $SHARED_DATA"
@@ -48,17 +48,43 @@ cp -r "$SOURCE_DATA"/* "$LOCAL_DATA_DIR"
 echo "✅ Data copy complete."
 
 # ---------------------------------------------------------
-# 4. CONFIG MAGIC
+# ---------------------------------------------------------
+# 4. CONFIG MAGIC (Unique Sub-folder INSIDE Seed folder)
 # ---------------------------------------------------------
 TEMP_CONFIG="experiments/configs/config_local_${SLURM_JOB_ID}.yaml"
 
+# 1. Define the Base Folder (Matches your config)
+BASE_SEED_DIR="experiments/results_seed42"
+
+# 2. Define the Unique Sub-folder for THIS specific job
+# Result: experiments/results_seed42/job_18541998
+NEW_SAVE_DIR="${BASE_SEED_DIR}/job_${SLURM_JOB_ID}"
+
+# 3. Create that folder
+mkdir -p "$NEW_SAVE_DIR"
+
+echo "📝 Creating config for Job ${SLURM_JOB_ID}..."
+echo "📂 Saving results INSIDE: $NEW_SAVE_DIR"
+
+# 4. Update the temporary config
 sed -e "s|data_path: .*|data_path: \"$LOCAL_DATA_DIR\"|" \
     -e "s|num_workers: .*|num_workers: 4|" \
+    -e "s|save_dir: .*|save_dir: \"$NEW_SAVE_DIR\"|" \
     experiments/configs/config.yaml > "$TEMP_CONFIG"
-
+    
+# ---------------------------------------------------------
 # 5. Run Training
-echo "Job ID: $SLURM_JOB_ID"
+# ---------------------------------------------------------
+echo "------------------------------------------------"
+echo "🕒 Training START time: $(date)"
+echo "🆔 Job ID: $SLURM_JOB_ID"
+echo "------------------------------------------------"
+
 python -u experiments/train.py --config "$TEMP_CONFIG"
+
+echo "------------------------------------------------"
+echo "🕒 Training END time: $(date)"
+echo "------------------------------------------------"
 
 # 6. Cleanup
 rm "$TEMP_CONFIG"

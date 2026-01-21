@@ -57,7 +57,10 @@ def get_dataloaders(config: Dict) -> Tuple[DataLoader, DataLoader]:
     # Note: We use the indices map we created in pcam.py to get only valid labels
     # PASTE THIS INSTEAD
     # 1. Load ALL labels into memory first (Fast! ~1MB total)
-    all_labels = train_ds.y_data[:].flatten()
+    import h5py
+    # Open the file manually just once to get the labels for weighting
+    with h5py.File(train_ds.y_path, "r") as f:
+        all_labels = f["y"][:].flatten() # Reads into memory
     
     # 2. Select only the valid indices (handling the filter)
     train_labels = all_labels[train_ds.indices]
@@ -89,7 +92,9 @@ def get_dataloaders(config: Dict) -> Tuple[DataLoader, DataLoader]:
         shuffle=False,            # <--- MUST BE FALSE when using a sampler don't change 
         num_workers=data_cfg["num_workers"],
         worker_init_fn=seed_worker,  
-        generator=g
+        generator=g,
+        pin_memory=True,
+        persistent_workers=True
     )
     
     val_loader = DataLoader(
@@ -98,7 +103,9 @@ def get_dataloaders(config: Dict) -> Tuple[DataLoader, DataLoader]:
         shuffle=data_cfg["shuffle_val"], 
         num_workers=data_cfg["num_workers"],
         worker_init_fn=seed_worker,  
-        generator=g
+        generator=g,
+        pin_memory=True,
+        persistent_workers=True
     )
     
     return train_loader, val_loader

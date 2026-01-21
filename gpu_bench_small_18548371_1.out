@@ -1,0 +1,59 @@
+Lmod has detected the following error: The following module(s) are unknown:
+"Python/3.11.3"
+
+Please check the spelling or version number. Also try "module spider ..."
+It is also possible your cache file is out-of-date; it may help to try:
+  $ module --ignore_cache load "Python/3.11.3"
+
+Also make sure that all modulefiles written in TCL start with the string
+#%Module
+
+
+
+JobID: 18548382  ArrayJobID: 18548371  TaskID: 1
+Running SMALL model throughput benchmark with batch_size=16
+GPU info:
+Wed Jan 21 20:57:37 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 580.95.05              Driver Version: 580.95.05      CUDA Version: 13.0     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA A100-SXM4-40GB          On  |   00000000:31:00.0 Off |                   On |
+| N/A   28C    P0             38W /  400W |     249MiB /  40960MiB |     N/A      Default |
+|                                         |                        |              Enabled |
++-----------------------------------------+------------------------+----------------------+
+|   1  NVIDIA A100-SXM4-40GB          On  |   00000000:32:00.0 Off |                   On |
+| N/A   28C    P0             37W /  400W |     249MiB /  40960MiB |     N/A      Default |
+|                                         |                        |              Enabled |
++-----------------------------------------+------------------------+----------------------+
+|   2  NVIDIA A100-SXM4-40GB          On  |   00000000:CA:00.0 Off |                   On |
+| N/A   28C    P0             38W /  400W |     249MiB /  40960MiB |     N/A      Default |
+|                                         |                        |              Enabled |
++-----------------------------------------+------------------------+----------------------+
+|   3  NVIDIA A100-SXM4-40GB          On  |   00000000:E3:00.0 Off |                   On |
+| N/A   28C    P0             37W /  400W |     249MiB /  40960MiB |     N/A      Default |
+|                                         |                        |              Enabled |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| MIG devices:                                                                            |
++------------------+----------------------------------+-----------+-----------------------+
+| GPU  GI  CI  MIG |              Shared Memory-Usage |        Vol|        Shared         |
+|      ID  ID  Dev |                Shared BAR1-Usage | SM     Unc| CE ENC  DEC  OFA  JPG |
+|                  |                                  |        ECC|                       |
+|==================+==================================+===========+=======================|
+|  0    7   0   0  |              36MiB /  4864MiB    | 14      0 |  1   0    0    0    0 |
+|                  |               0MiB /  3052MiB    |           |                       |
++------------------+----------------------------------+-----------+-----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+
+python: can't open file '/gpfs/home3/scur2262/MLOps_GROEP/scripts/throughput_gpu_bench.py': [Errno 2] No such file or directory
