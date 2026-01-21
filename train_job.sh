@@ -49,27 +49,33 @@ echo "✅ Data copy complete."
 
 # ---------------------------------------------------------
 # ---------------------------------------------------------
-# 4. CONFIG MAGIC (Unique Sub-folder INSIDE Seed folder)
+# 4. CONFIG MAGIC (Dynamic Seeds)
 # ---------------------------------------------------------
 TEMP_CONFIG="experiments/configs/config_local_${SLURM_JOB_ID}.yaml"
 
-# 1. Define the Base Folder (Matches your config)
-BASE_SEED_DIR="experiments/results_seed42"
+# 1. Get the Seed from the command line (Default to 42 if not set)
+# We use this variable: $SEED
+MY_SEED=${SEED:-42}
 
-# 2. Define the Unique Sub-folder for THIS specific job
-# Result: experiments/results_seed42/job_18541998
+# 2. Define the Base Folder based on THAT seed
+BASE_SEED_DIR="experiments/results_seed${MY_SEED}"
+
+# 3. Define the Unique Sub-folder for THIS specific job
 NEW_SAVE_DIR="${BASE_SEED_DIR}/job_${SLURM_JOB_ID}"
 
-# 3. Create that folder
+# 4. Create that folder
 mkdir -p "$NEW_SAVE_DIR"
 
 echo "📝 Creating config for Job ${SLURM_JOB_ID}..."
-echo "📂 Saving results INSIDE: $NEW_SAVE_DIR"
+echo "🌱 Using SEED: $MY_SEED"
+echo "📂 Saving results to: $NEW_SAVE_DIR"
 
-# 4. Update the temporary config
+# 5. Update the temporary config
+# We now use sed to REPLACE the seed in the file with $MY_SEED
 sed -e "s|data_path: .*|data_path: \"$LOCAL_DATA_DIR\"|" \
     -e "s|num_workers: .*|num_workers: 4|" \
     -e "s|save_dir: .*|save_dir: \"$NEW_SAVE_DIR\"|" \
+    -e "s|seed: .*|seed: $MY_SEED|" \
     experiments/configs/config.yaml > "$TEMP_CONFIG"
     
 # ---------------------------------------------------------
