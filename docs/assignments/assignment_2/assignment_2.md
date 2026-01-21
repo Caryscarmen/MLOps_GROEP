@@ -201,6 +201,7 @@ Data Path: Specifies the location of the PCAM files on the Snellius server.
 2. **Results (Average of 3 Seeds):**
 
 3. **Logging Scalability:**
+* Ad-hoc logging lacks persistence and auditability, leading to the permanent loss of experimental data if a terminal session or compute job unexpectedly closes. Furthermore, it makes comparing dozens of runs impossible as manual data extraction from unstructured print statements is time consuming and prone to human error.
 
 4. **Tracker Initialization:**
 * Our training code initializes the tracker once at the start and interacts with it through a clean API, keeping the training logic separate from the logging logic:
@@ -234,16 +235,14 @@ Data Path: Specifies the location of the PCAM files on the Snellius server.
    ```
 
 5. **Evidence of Logging:**
+![Experiment Tracking Screenshot](assets/5.png)
 
 6. **Reproduction & Checkpoint Usage:**
 
 7. **Deployment Issues:**
-* Data drift: 
-* Silent degradation: Can be solved with continuous monitoring.
-* Adversarial inputs: 
-
-
-
+* Data drift: New clinical data may have different staining intensities than the PCAM set. Mitigation: Implement continuous monitoring and retraining pipelines with new data.
+* Model Latency: Real-time analysis might be too slow on standard hardware. Mitigation: Use model quantization or pruning to optimize inference speed.
+* Silent Failures: The model might provide high-confidence but wrong predictions on rare tissue types. Mitigation: Use uncertainty estimation and an "expert-in-the-loop" review system.
 
 ---
 

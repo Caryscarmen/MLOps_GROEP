@@ -1,7 +1,9 @@
 import random
 import numpy as np
 import torch
-
+import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use('Agg')  # Voorkomt crashes op servers zonder scherm
 import argparse
 import yaml
 import torch
@@ -69,6 +71,55 @@ def log_baseline_results(all_labels, tracker):
     print(f"F2-Score: {f2:.4f}")
     print("-"*30)
 
+def perform_error_analysis(model, test_loader, device, output_dir):
+    """Voert de analyse uit voor Question 6."""
+    print("\nStarting Question 6: Error Analysis & Slicing...")
+    model.eval()
+    all_preds, all_probs, all_labels, all_images, intensities = [], [], [], [], []
+
+    with torch.no_grad():
+        for images, labels in test_loader:
+            images = images.to(device)
+            outputs = model(images).squeeze()
+            probs = torch.sigmoid(outputs).cpu().numpy()
+            preds = (probs > 0.5).astype(int)
+            
+            all_probs.extend(probs if probs.shape else [probs.item()])
+            all_preds.extend(preds if preds.shape else [preds.item()])
+            all_labels.extend(labels.numpy())
+            all_images.extend(images.cpu().numpy())
+            # Slicing characteristic: Gemiddelde helderheid
+            intensities.extend(images.mean(dim=(1, 2, 3)).cpu().numpy())
+
+    all_preds, all_labels, all_images = np.array(all_preds), np.array(all_labels), np.array(all_images)
+    intensities = np.array(intensities)
+
+    # (a) Qualitative Analysis: Top 5 FP en FN
+    fps = np.where((all_preds == 1) & (all_labels == 0))[0]
+    fns = np.where((all_preds == 0) & (all_labels == 1))[0]
+
+    for idx_list, title, filename in [(fps, "False Positives", "fps.png"), (fns, "False Negatives", "fns.png")]:
+        plt.figure(figsize=(15, 5))
+        for i, idx in enumerate(idx_list[:5]):
+            plt.subplot(1, 5, i+1)
+            img = np.transpose(all_images[idx], (1, 2, 0))
+            img = (img - img.min()) / (img.max() - img.min()) # Normaliseer voor plot
+            plt.imshow(img)
+            plt.axis('off')
+        plt.suptitle(f"Question 6a: {title}")
+        plt.savefig(output_dir / filename)
+        plt.close()
+
+    # (b) Quantitative Slicing: Dark Slice (Bottom 10% intensity)
+    thresh = np.percentile(intensities, 10)
+    dark_idx = np.where(intensities <= thresh)[0]
+    slice_f2 = fbeta_score(all_labels[dark_idx], all_preds[dark_idx], beta=2.0, zero_division=0)
+    global_f2 = fbeta_score(all_labels, all_preds, beta=2.0)
+
+    with open(output_dir / "slicing_results.txt", "w") as f:
+        f.write(f"Global F2: {global_f2:.4f}\nDark Slice F2: {slice_f2:.4f}\nGap: {global_f2 - slice_f2:.4f}")
+    print(f"Analysis complete. F2 Gap: {global_f2 - slice_f2:.4f}")
+    
 def main(config_path):
     # 1. Load Config
     with open(config_path, "r") as f:
@@ -81,7 +132,8 @@ def main(config_path):
     # 2. Prepare Data
     set_seed(cfg['seed'])
     print("Loading Data...")
-    train_loader, val_loader = get_dataloaders(cfg)
+    # train_loader, val_loader = get_dataloaders(cfg)
+    train_loader, val_loader, test_loader = get_dataloaders(cfg)
 
     # 3. Initialize Model
     print("Initializing Model...")
@@ -234,6 +286,20 @@ def main(config_path):
     # 5.5 Baseline Analyse
     print("\nUitvoeren van Baseline Analyse voor Question 5.5...")
     log_baseline_results(all_labels, tracker)
+
+    print("\nExecuting Question 6: Error Analysis and Slicing...")
+    analysis_output_dir = Path(tracker.run_dir) / "analysis"
+    analysis_output_dir.mkdir(parents=True, exist_ok=True)
+
+    perform_error_analysis(
+        model=model, 
+        test_loader=test_loader, 
+        device=device, 
+        output_dir=analysis_output_dir
+    )
+
+    print(f"Analysis results saved to: {analysis_output_dir}")
+
 
     # 6. Save Results
     results_path = save_dir / "metrics.json"
