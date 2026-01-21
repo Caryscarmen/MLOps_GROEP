@@ -2,10 +2,10 @@
 **MLOps & ML Programming (2026)**
 
 ## Group Information
-* **Group Number:** [Your Group Number]
-* **Team Members:** [Member 1 Name/ID, Member 2 Name/ID, Member 3 Name/ID, Member 4 Name/ID, Member 5 Name/ID]
-* **GitHub Repository:** [Link to your Group Repository]
-* **Base Setup Chosen from Assignment 1:** [Name of the group member whose repo was used as the foundation]
+* **Group Number:** 38
+* **Team Members:** Sam Vu 15623211, Carys Augustine 15614972, Aye Taky 15552853, Guido Rienks
+* **GitHub Repository:** https://github.com/Caryscarmen/MLOps_GROEP.git
+* **Base Setup Chosen from Assignment 1:** Sam Vu
 
 ---
 
@@ -59,12 +59,21 @@
 
 | User | Run # | Final Train Loss | Final Val Loss | Result |
 | :--- | :---: | :--- | :--- | :--- |
-| **Sam** | 1 | 0.3751 | 0.7829 | — |
-| **Sam** | 2 | 0.007548 | 0.564752 | ✅ Match |
-| **[Teammate]** | 1 | 0.007548 | 0.564752 | ✅ Match |
-| **[Teammate]** | 2 | 0.007548 | 0.564752 | ✅ Match |
+| **Sam** | 1 | 0.4929 | 0.6326 | — |
+| **Sam** | 2 | 0.4929 | 0.6326 | ✅ Match |
+| **Carys** | 1 | 0.4929 | 0.6326 | ✅ Match |
+| **Carys** | 2 | 0.4929 | 0.6326 | ✅ Match |
+| **Aye** | 1 | 0.4929 | 0.6326 | ✅ Match |
+| **Aye** | 2 | 0.4929 | 0.6326 | ✅ Match |
 
----
+Sam
+![sam1](assets/run1sam.png)
+![sam2](assets/run2sam.png)
+
+Carys
+![carys1](assets/run1carys.png)
+![carys2](assets/run2carys.jpeg)
+
 ### 2. Leakage Prevention
 
 To prevent data leakage, we ensure that information from the test set does not influence the training process. Specifically:
@@ -182,12 +191,31 @@ Data Path: Specifies the location of the PCAM files on the Snellius server.
 
 ## Question 4: Gradients & LR Scheduler
 1. **Internal Dynamics:**
+![plot1](assets/gradientnormsplot.png)
+   1.1.
+   * High Stochasticity: The plot displays the gradient norm for every batch rather than an average over the entire epoch. The high granularity reveals significant high-frequency noise, with the norm fluctuating rapidly.
+   * Stability Insight: If we plotted per epoch we would see a more smooth downward curve but the stepwise plot proves that the training is locally unstable. The high variance indicates that the loss landscape is not smooth; some batches provide a strong, clear signal while others (randomly sampled) pull the model in different directions. This confirms the training is working (overall trend is down) but relies on the "law of large numbers" to average out the noise from unstable individual batches.
+
+   1.2.
+   * Observation: There are distinct spikes where the gradient norm shoots up higher than the local average (e.g., spikes reaching >20 in the early steps or sudden jumps to >12 in later stages where the average is lower).
+   *  Indication: These spikes typically indicate that there are outliers or "garbage" data within a specific batch.
+
 
 2. **Learning Rate Scheduling:**
-* For this experiment, we implemented the ReduceLROnPlateau scheduler. We chose ReduceLROnPlateau because it only reduces the learning rate when the validation loss stops decreasing. Because medical images are complex and the model can get stuck at unpredictable moments, ReduceLROnPlateau is better.
+![plot2](assets/learningrateplot.png)
+   2.1.
+   * Scheduler: `ReduceLROnPlateu`
+   * Justification: We chose this schedular because it adapts rather than staying fixed. Unlike `StepLR` (which decays on a fixed schedule regardless of performance), `ReduceLROnPlateau` keeps track of the Validation Loss. It only reduces the learning rate when the improvement stalls.
 
+   This is effective for PCAM because medical image classification often involves a noisy landscape. A fixed scheduler might decay too early or too late. By using a "patience" mechanism. `ReduceROnPlateau` ignores temporary noise and only intervenes when optimization truly stagnates.
 
-* Reducing the learning rate prevents oscillation. As the model approaches the global minimum, large updates can cause the weights to oscillate around the optimum, preventing the loss from decreasing further.
+   2.2.
+   * The problem (High LR): In the early stages of training, a larger learn rate is beneficial because it allows the optimizer to take large steps and descend the gradient rapidly. However, as the model weights approach the global minimum the gradients become smaller. If the learning rate remains high, the update steps will be too large relative to the curvature of the lsos function. This causes the model to overshoot the minimum and bounce back and forth (oscillate) around the target without ever setting in.
+
+   * The Solution (Decay): By reducing the learning rate by a factor (e.g., 0.1 ) in the final stages we force  the model to take much more smaller and precise steps. The optimizer can then lessen oscillation and fine-tune weights.
+
+   In our plot the learning rate remains constant at 10^-3 to maximize initial speed then drops to 10^-4 to facilitate this final fine-tuning phase.
+
 ---
 
 ## Question 5: Part 1 - Experiment Tracking
@@ -199,8 +227,17 @@ Data Path: Specifies the location of the PCAM files on the Snellius server.
 
 
 2. **Results (Average of 3 Seeds):**
+'''bash
+Average ROC-AUC: 0.7485 (std: 0.0154)
+Average F2-Score: 0.6698 (std: 0.0734)
+'''
+Relatively high standard deviation in the F2-score (0.07) compared to ROC-AUC suggests that while the ranking ability is stable, its performance at the specific decision treshold varies significantly between random seeds. Needs treshold tuning or other methods.
 
 3. **Logging Scalability:**
+Ad-hoc logging (using print statements or naming files manually) works for single runs but fails at scale because it does not have structure or queryability.
+   1. It does not have history. Console logs are transient; once the terminal closes the history is lost or buried.
+   2. You cannot easily compare.
+   3. Ad-hoc methods rarely capture full context which makes it hard to reproduce
 
 4. **Tracker Initialization:**
 * Our training code initializes the tracker once at the start and interacts with it through a clean API, keeping the training logic separate from the logging logic:
@@ -234,16 +271,38 @@ Data Path: Specifies the location of the PCAM files on the Snellius server.
    ```
 
 5. **Evidence of Logging:**
+![results](assets/results5.png)
 
 6. **Reproduction & Checkpoint Usage:**
+   To demonstrate reproducibility, I selected the run for which the model artifacts were preserved: Job ID 18549665 (Seed 128).
+
+    Step 1: Retrieve Configuration Although the unique folder was overwritten due to a configuration naming overlap, the full state was preserved in the final checkpoint. I located the checkpoint at `experiments/results/mlp_baseline/checkpoint_epoch_2.pt`. Using PyTorch, I inspected the `config` dictionary stored within, which confirmed the hyperparameters: LR: 0.001, Batch Size: 128, Hidden Units: 999, Patience: 2, Seed: 128.
+
+    Step 2: Environment Restoration By inspecting the Slurm log file, I verified the exact software stack used (`Python/3.13.1, GCCcore-14.2.0`, etc).
+
+    Step 3: Data State The log confirms the dataset was sourced from `/scratch-shared/scur2395/surfdrive` and copied to `$TMPDIR`. Since PCAM is a static dataset, versioning the path is sufficient.
+
+    Step 4: Deterministic Execution To reproduce the results, I would execute the training script using the exact configuration extracted from the checkpoint. Because our code sets random seeds (`seed: 128`) and enforces `torch.backends.cudnn.deterministic = True`, the resulting Peak F2-score of 0.7654 would be identical.
 
 7. **Deployment Issues:**
-* Data drift: 
-* Silent degradation: Can be solved with continuous monitoring.
-* Adversarial inputs: 
+Loading Checkpoints for New Data: To use the saved model on new, unseen data (Inference Mode), I would follow these steps:
 
+   1. Load the File: checkpoint = `torch.load('experiments/results/mlp_baseline/checkpoint_epoch_2.pt')`
 
+   2. Initialize Architecture: Instantiate the model using the parameters found in the saved config: `model = MLP(input_shape=[3,96,96], hidden_units=128)`
 
+   3. Load Weights: Apply the learned parameters: `model.load_state_dict(checkpoint['model_state_dict'])`
+
+   4. Set Eval Mode: Crucial Step. Run `model.eval()` to disable Dropout and switch Batch Normalization layers to inference mode.
+
+   5. Predict: Pass the new image tensor through the model and apply sigmoid: `probability = torch.sigmoid(model(new_image))`
+
+## 8. Deployment Issues:
+* Data Drift: The model was trained on PCAM data (specific scanners/staining protocols). If deployed in a hospital using a different scanner brand (e.g., Phillips vs. Leica), the color distribution might shift, causing a drop in accuracy. Mitigation: Implement strict color normalization preprocessing or use Stain Normalization techniques.
+
+* Silent Degradation: Unlike code that crashes, an ML model can fail silently by confidently predicting "Healthy" for everything if the input data format changes slightly. Mitigation: Implement a monitoring system that alerts if the prediction distribution shifts significantly (e.g., if the positive rate drops from 50% to 1%).
+
+* Adversarial Inputs / Robustness: Medical images can be susceptible to noise or artifacts (e.g., a pen mark on a slide or a scanning glitch) that might trick the model. Mitigation: Use data augmentation during training (adding noise, rotations) to make the model robust to minor artifacts.
 
 ---
 
@@ -268,30 +327,103 @@ Data Path: Specifies the location of the PCAM files on the Snellius server.
 ---
 
 ## Question 7: Team Collaboration and CI/CD
-1. **Consolidation Strategy:** 
+
+1. **Consolidation Strategy:**
+   Our group essentially used a manual porting and refactoring strategy rather than a automated git-based merge (like git merge or git rebase). This was a deliberate choice to ensure a clean "foundation" that followed the strict modular structure required for Question 3.
+   
+   *The Consolidation Strategy: Manual Porting*
+   * **Choice of Foundation:** The group chose the most modular and documented individual codebase as the foundation to avoid inheriting "technical debt" or hard-coded paths from different local environments.
+   * **The Process:** Instead of merging entire histories, you manually ported specific logical components (e.g., the PCAMDataset class, the MLP model, and the train.py logic) into a fresh, shared repository structure.
+   
+   *Justification for Manual Porting:*
+   * **Clean Slate:** Automated merges often bring in conflicting .gitignore files, hidden cache directories, or incompatible folder structures (like src/ vs root/ layouts).
+   * **Standardization:** Manual porting allowed the group to standardize on a single configuration management system (the YAML + argparse approach) required for Question 3, ensuring every component used the same logic for device selection and hyperparameter loading.
+   * **Bug Prevention:** By manually moving code, you had to re-verify that every import path (e.g., from ml_core.data.loader import ...) worked within the new consolidated structure, which acted as a "sanity check".
+
 2. **Collaborative Flow:**
+   ![](assets/7.2b.png)
+   ![](assets/7.2bc.png)
+   ![](assets/7.2bcd.png)
 
 3. **CI Audit:**
+   In our CI pipeline, we explicitly install PyTorch using the CPU-only index url because GitHub Actions usually runs on machines without a GPU. If we were to install the default GPU-enabled version of PyTorch, the installation could become heavier, slower, or even fail due to missing CUDA-related dependencies on the GitHub runner. By forcing the CPU version with --index-url https://download.pytorch.org/whl/cpu, we make sure the CI environment remains stable, fast, and consistent across all runs. This also supports reproducibility, because every pipeline run uses the same type of installation instead of potentially selecting different builds depending on the system.
+   
+   The CI helps prevent teammates from merging code that breaks the PCAMDataset or the MLP architecture by running automated checks each time a Pull Request is created. This includes steps such as tests, which catch common errors like broken imports, dataset loading problems, shape mismatches, or incorrect outputs. Because the pipeline must pass before merging, if someone makes a change that accidentally breaks training or data loading, the CI will fail and the code should not be merged until it is fixed.
 
 4. **Merge Conflict Resolution:**
+   —
 
 5. **Branching Discipline:**
+   ![](assets/7.5.png)
+   In our repository, the git log --graph --oneline --all --max-count=15 output looks mostly linear, meaning it appears as one continuous line of commits rather than multiple diverging branches. This is mainly because most development work and commits were done before we introduced our dev + feature branching workflow. Only at the end of the project we created a dev branch and worked with feature branches. Even though the graph looks flat, we did demonstrate the intended workflow by making a change in a feature branch, opening a Pull Request into dev, running CI checks, and merging through GitHub.
+   
+   For team collaboration, a non-linear history can be useful because it clearly shows the merges that combine work back into the main codebase clearly, however, we would generally prefer a more linear history in practice because it keeps the log easier to read and makes it simpler to track progress.
 
 ---
 
 ## Question 8: Benchmarking Infrastructure
+
 1. **Throughput Logic:**
+   **a.** We can measure throughput either during the real training loop or with a separate benchmarking loop. Measuring during training is the most realistic option, because it includes everything that actually happens during training, such as the forward pass, backward pass, optimizer updates, and data loading. The downside is that it can be less stable, because extra operations (like logging or validation) can reduce the measured throughput and make results harder to compare.
+   Measuring separately gives a cleaner and more controlled throughput measurement. In that case, we run batches through the model without additional training steps, which makes the timing more consistent. However, this approach may be slightly less representative of the real training workflow, since it focuses mainly on pure model computation.
+   Throughput can be influenced by operations that are not part of the core model computation. Examples are validation runs or saving checkpoints. Data loading is also a major factor, because if reading the dataset is slow, or if the DataLoader has too few workers, the GPU can remain idle while waiting for data, which lowers throughput.
+
+   **b.**
+   ```python
+   import time
+   import torch
+
+   def measure_throughput(model, loader, device, steps=200, warmup=20):
+       model.train()
+       images_seen = 0
+
+       # Warmup (important for stable GPU timings)
+       it = iter(loader)
+       for _ in range(warmup):
+           x, y = next(it)
+           x, y = x.to(device), y.to(device)
+           out = model(x)
+           loss = torch.nn.functional.cross_entropy(out, y)
+           loss.backward()
+           model.zero_grad(set_to_none=True)
+
+       if device.type == "cuda":
+           torch.cuda.synchronize()
+
+       start = time.perf_counter()
+
+       for _ in range(steps):
+           x, y = next(it)
+           x, y = x.to(device), y.to(device)
+           out = model(x)
+           loss = torch.nn.functional.cross_entropy(out, y)
+           loss.backward()
+           model.zero_grad(set_to_none=True)
+           images_seen += x.size(0)
+
+       if device.type == "cuda":
+           torch.cuda.synchronize()
+
+       end = time.perf_counter()
+       return images_seen / (end - start)
+       ```
+
+   **c.** Yes, it likely would. On GPUs, using float16 (or mixed precision) often increases throughput because float16 uses less memory bandwidth and many GPUs can accelerate float16 operations using tensor cores. This means the model can compute faster and process more images per second.
+   On CPUs, float16 usually does not provide the same benefits because CPU architectures are typically optimized for float32. In some cases, float16 may not improve throughput at all, or may even slow down performance due to conversion overhead.
+
+   **d.** One possible issue is that we run the benchmark under different hardware conditions than before, for example on a more heavily loaded node or a slower node type. Another common cause is that the DataLoader configuration changed (e.g., fewer workers), which can reduce the rate at which data is delivered to the model. On GPU runs, a major issue could also be that CUDA is not being used correctly and the model ends up running on the CPU, which would significantly reduce throughput.
 
 2. **Throughput Table (Batch Size 1):**
 
 | Partition | Node Type | Throughput (img/s) | Job ID |
 | :--- | :--- | :--- | :--- |
-| `thin_course` | CPU Only | | |
-| `gpu_course` | GPU ([Type]) | | |
+| `thin_course` | CPU Only | 984.72 | 18545787 |
+| `gpu_course` | GPU | 268.40 | 18546129 |
 
 3. **Scaling Analysis:**
 
 4. **Bottleneck Identification:**
+   We think the main bottleneck is the HDF5 data loading, because every iteration we first need to fetch the data from disk before the GPU can even start computing. Especially with small batches (like batch size 1), loading overhead becomes a big part of the total time per step. So even though the GPU is fast, it often ends up waiting until the next sample is actually available.
 
 ---
 

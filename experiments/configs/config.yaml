@@ -19,7 +19,7 @@ model:
   name: "mlp"
   input_shape: [3, 96, 96]
   num_classes: 1
-  hidden_units: 999
+  hidden_units: 128
 
 training:
   epochs: 3
